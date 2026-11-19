@@ -90,7 +90,28 @@ document.getElementById('frontBtn').onclick=()=>{if(selected>=0){const a=items.s
 document.getElementById('backBtn').onclick=()=>{if(selected>0){const a=items.splice(selected,1)[0];items.unshift(a);selected=0;sync();render()}};
 document.getElementById('bgColor').oninput=e=>{bg=e.target.value;render()};
 document.getElementById('transparentBtn').onclick=e=>{transparent=!transparent;e.target.textContent=transparent?'Desactivar':'Activar';render()};
-function updateProduct(){const [w,h]=sizes[product.value],oldH=canvas.height,newH=Math.round(900*h/w);document.getElementById('dimensions').textContent=w+' × '+h+' px · 300 DPI';if(newH!==oldH){const factor=newH/oldH;items.forEach(o=>{o.y=o.y*newH/oldH;if(o.type==='text'||o.type==='shape')o.size*=factor;if(o.type==='image'){o.w*=factor;o.h*=factor}});canvas.height=newH;document.querySelector('.artboard').style.aspectRatio=w+'/'+h;}const mock=document.getElementById('mockProduct');mock.style.background=product.value==='mug'?'#e5e7eb':'#dce4ef';mock.style.clipPath=product.value==='tote'?'polygon(15% 10%,85% 10%,95% 100%,5% 100%)':(product.value==='square'||product.value==='mug'?'none':'polygon(25% 0,40% 7%,60% 7%,75% 0,100% 22%,84% 42%,74% 32%,74% 100%,26% 100%,26% 32%,16% 42%,0 22%)');mock.style.borderRadius=product.value==='mug'?'8px 8px 20px 20px':(product.value==='square'?'8px':'0');mock.style.width=product.value==='mug'?'120px':(product.value==='square'?'94px':'90px');mock.style.height=product.value==='mug'?'72px':'94px';render();sync()}document.getElementById('product').onchange=updateProduct;
+function updateProduct(){
+ const [w,h]=sizes[product.value];
+ const oldH=canvas.height;
+ const newH=Math.round(900*h/w);
+ document.getElementById('dimensions').textContent=w+' × '+h+' px · 300 DPI';
+ if(newH!==oldH){
+  const factor=newH/oldH;
+  items.forEach(o=>{
+   o.y*=factor;
+   if(o.type==='text'||o.type==='shape')o.size*=factor;
+   if(o.type==='image'){o.w*=factor;o.h*=factor}
+  });
+  canvas.height=newH;
+  document.querySelector('.artboard').style.aspectRatio=w+'/'+h;
+ }
+ // El simulador 3D es independiente del lienzo; no se manipula ningún
+ // elemento antiguo de maqueta que ya no existe en esta interfaz.
+ render();
+ sync();
+ say('Formato actualizado: '+product.options[product.selectedIndex].text+'. El diseño se ha conservado.');
+}
+document.getElementById('product').onchange=updateProduct;
 document.getElementById('clearBtn').onclick=()=>{if(confirm('¿Limpiar todos los elementos del lienzo?')){items=[];selected=-1;sync();render()}};
 canvas.onpointerdown=e=>{const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*canvas.width/r.width,y=(e.clientY-r.top)*canvas.height/r.height;selected=-1;for(let i=items.length-1;i>=0;i--){const b=bounds(items[i]);if(x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h){selected=i;drag={x,y,ox:items[i].x,oy:items[i].y};break}}canvas.setPointerCapture(e.pointerId);sync();render()};
 canvas.onpointermove=e=>{if(!drag)return;const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*canvas.width/r.width,y=(e.clientY-r.top)*canvas.height/r.height,o=items[selected];o.x=drag.ox+x-drag.x;o.y=drag.oy+y-drag.y;render()};
