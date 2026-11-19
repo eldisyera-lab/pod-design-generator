@@ -12,6 +12,31 @@ header{height:66px;border-bottom:1px solid var(--line);display:flex;align-items:
 aside{background:var(--panel);padding:18px;border-right:1px solid var(--line)}.right{border-right:0;border-left:1px solid var(--line)}h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:4px 0 14px}.group{padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--line)}label{display:block;color:var(--muted);font-size:12px;margin:10px 0 5px}input,select,textarea{width:100%;background:#0c1424;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:9px;font:inherit;min-width:0}input[type=color]{height:38px;padding:3px}input[type=range]{padding:0;accent-color:var(--accent)}.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}.btn.full{width:100%;margin:4px 0}.workspace{padding:24px;display:flex;flex-direction:column;align-items:center;gap:16px;min-width:0}.worktop{width:min(100%,850px);display:flex;align-items:center;justify-content:space-between;color:var(--muted);gap:12px}.stage{width:min(100%,680px);min-height:560px;display:grid;place-items:center;background:radial-gradient(ellipse at center,#1a2740,#101827 65%);border:1px solid var(--line);border-radius:16px;padding:24px;overflow:hidden}.artboard{width:min(100%,420px);aspect-ratio:5/6;background-color:#fff;background-image:linear-gradient(45deg,#e8e8e8 25%,transparent 25%),linear-gradient(-45deg,#e8e8e8 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e8e8e8 75%),linear-gradient(-45deg,transparent 75%,#e8e8e8 75%);background-size:18px 18px;background-position:0 0,0 9px,9px -9px,-9px 0;box-shadow:0 18px 60px #0008;position:relative;overflow:hidden}.artboard canvas{width:100%;height:100%;display:block;touch-action:none}.hint{color:var(--muted);font-size:12px;text-align:center}.swatches{display:flex;gap:8px;flex-wrap:wrap}.swatch{width:25px;height:25px;border:2px solid #ffffff44;border-radius:50%;cursor:pointer}.small{font-size:12px;color:var(--muted)}.status{color:#a7f3d0;font-size:12px;min-height:18px}.preview{background:#0c1424;border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}.mock{height:118px;display:grid;place-items:center;background:#273449;border-radius:7px;overflow:hidden}.mock-shirt{width:90px;height:94px;background:#e5e7eb;clip-path:polygon(25% 0,40% 7%,60% 7%,75% 0,100% 22%,84% 42%,74% 32%,74% 100%,26% 100%,26% 32%,16% 42%,0 22%);position:relative}.mock-shirt:after{content:"";position:absolute;inset:25% 25%;background:#11182722}
 @media(max-width:1000px){.layout{grid-template-columns:220px 1fr}.right{grid-column:1/-1;border-left:0;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.right .group{border:0}.stage{min-height:460px}}
 @media(max-width:680px){header{padding:0 12px}.layout{display:flex;flex-direction:column}aside{border-right:0;border-bottom:1px solid var(--line)}.workspace{padding:14px}.right{display:block}.actions .btn:not(.primary){display:none}.stage{min-height:390px;padding:12px}}
+
+/* Simulador de maqueta 3D local */
+.sim3d{background:#0c1424;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:12px}
+.sim3d-stage{height:245px;display:grid;place-items:center;perspective:850px;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,#40516b,#172235 70%);border-radius:9px}
+.sim3d-object{position:relative;width:150px;height:178px;transform-style:preserve-3d;transform:rotateY(-18deg) rotateX(3deg);transition:transform .12s ease-out;filter:drop-shadow(12px 18px 12px #0008)}
+.sim3d-face{position:absolute;inset:0;overflow:hidden;background:linear-gradient(110deg,#f7f7f7 0%,#d9dde4 48%,#aeb7c5 100%);box-shadow:inset -10px 0 18px #0002,inset 8px 0 14px #fff8}
+.sim3d-art{position:absolute;left:27%;top:27%;width:46%;height:48%;background-position:center;background-repeat:no-repeat;background-size:contain;mix-blend-mode:multiply;opacity:.96}
+.sim3d-object.shirt .sim3d-face{clip-path:polygon(25% 0,40% 7%,60% 7%,75% 0,100% 22%,84% 42%,74% 32%,74% 100%,26% 100%,26% 32%,16% 42%,0 22%)}
+.sim3d-object.hoodie .sim3d-face{clip-path:polygon(25% 0,38% 4%,62% 4%,75% 0,100% 22%,84% 42%,74% 32%,74% 100%,26% 100%,26% 32%,16% 42%,0 22%);background:linear-gradient(100deg,#d7dce5,#f3f4f6 45%,#aeb8c7)}
+.sim3d-object.tote{width:148px;height:160px;margin-top:22px}
+.sim3d-object.tote .sim3d-face{inset:22px 0 0;clip-path:polygon(8% 0,92% 0,100% 100%,0 100%);border-radius:3px}
+.sim3d-object.tote:before{content:"";position:absolute;left:42px;top:0;width:64px;height:48px;border:8px solid #c7ced9;border-bottom:0;border-radius:30px 30px 0 0;transform:translateZ(-2px)}
+.sim3d-object.tote .sim3d-art{top:42%;height:40%}
+.sim3d-object.mug{width:142px;height:112px;margin-right:22px}
+.sim3d-object.mug .sim3d-face{inset:5px 18px 5px 0;border-radius:8px 12px 18px 18px;background:linear-gradient(90deg,#9ca8b8,#f9fafb 24%,#e5e7eb 72%,#9aa6b6);transform:translateZ(0)}
+.sim3d-object.mug:after{content:"";position:absolute;right:0;top:28px;width:42px;height:50px;border:11px solid #cbd5e1;border-left:0;border-radius:0 28px 28px 0;transform:translateZ(-3px)}
+.sim3d-object.mug .sim3d-art{left:23%;top:22%;width:54%;height:58%;background-size:cover}
+.sim3d-object.square{width:150px;height:150px}
+.sim3d-object.square .sim3d-face{inset:0;background:linear-gradient(135deg,#f8fafc,#cbd5e1);border-radius:5px}
+.sim3d-object.square .sim3d-art{inset:10%;width:80%;height:80%;background-size:contain}
+.sim3d-controls{display:flex;align-items:center;gap:8px;margin-top:10px}
+.sim3d-controls input{flex:1}
+.sim3d-caption{font-size:11px;color:var(--muted);margin-top:8px;text-align:center}
+@media(max-width:1000px){.sim3d-stage{height:200px}}
+
 </style></head>
 <body>
 <header><div class="brand"><div class="logo">P</div><div>PrintStudio <span style="color:var(--muted);font-weight:400">/ POD Design Lab</span></div></div><div class="actions"><button class="btn" id="saveBtn">Guardar proyecto</button><button class="btn" id="openBtn">Abrir proyecto</button><button class="btn primary" id="exportBtn">Exportar PNG</button><input id="projectFile" type="file" accept=".json,.printstudio,application/json" hidden></div></header>
@@ -24,7 +49,7 @@ aside{background:var(--panel);padding:18px;border-right:1px solid var(--line)}.r
 <main class="workspace"><div class="worktop"><span>LIENZO DE DISEÑO</span><span id="selectionLabel">Ningún elemento seleccionado</span></div><div class="stage"><div class="artboard"><canvas id="canvas" width="900" height="1080"></canvas></div></div><div class="hint">Selecciona y arrastra los elementos para colocarlos · Usa el panel derecho para editarlos</div><div class="status" id="status"></div></main>
 <aside class="right"><section class="group"><h2>Editar elemento</h2><label>Texto</label><textarea id="textValue" rows="3" placeholder="Selecciona un texto para editarlo"></textarea><label>Tipografía</label><select id="font"><option>Arial</option><option>Georgia</option><option>Impact</option><option>Verdana</option><option>Trebuchet MS</option><option>Courier New</option></select><div class="row"><div><label>Tamaño</label><input id="fontSize" type="number" min="12" max="260" value="90"></div><div><label>Color</label><input id="color" type="color" value="#172033"></div></div><label>Escala del elemento</label><input id="scale" type="range" min=".2" max="2.5" step=".05" value="1"><div class="row"><button class="btn" id="boldBtn">Negrita</button><button class="btn" id="deleteBtn">Eliminar</button></div></section>
 <section class="group"><h2>Color rápido</h2><div class="swatches" id="swatches"></div><label>Capas</label><div class="row"><button class="btn" id="backBtn">Enviar atrás</button><button class="btn" id="frontBtn">Traer delante</button></div></section>
-<section><h2>Vista de producto</h2><div class="preview"><div class="mock"><div class="mock-shirt" id="mockProduct"></div></div><p class="small">Vista orientativa · Comprueba siempre la plantilla y el área segura de tu proveedor antes de imprimir.</p></div></section></aside>
+<section><h2>Simulador 3D</h2><div class="sim3d"><div class="sim3d-stage"><div class="sim3d-object shirt" id="sim3dObject"><div class="sim3d-face"><div class="sim3d-art" id="sim3dArt"></div></div></div></div><div class="sim3d-controls"><span class="small">Girar</span><input id="sim3dRotate" type="range" min="-65" max="65" value="-18"><span class="small" id="sim3dAngle">-18°</span></div><p class="sim3d-caption">Maqueta visual orientativa · El estampado se actualiza con tu lienzo.</p></div><p class="small">Vista previa para presentación. No sustituye la plantilla técnica ni la simulación exacta del proveedor de impresión.</p></section></aside>
 </div>
 <script>
 const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');let items=[],selected=-1,drag=null,transparent=false,bg='#ffffff';
@@ -33,7 +58,24 @@ const product=document.getElementById('product');
 function say(s){document.getElementById('status').textContent=s}
 function selectedImage(){const o=items[selected];return o&&o.type==='image'?o:null}
 function render(){ctx.clearRect(0,0,canvas.width,canvas.height);if(!transparent){ctx.fillStyle=bg;ctx.fillRect(0,0,canvas.width,canvas.height)}
- items.forEach((o,i)=>{ctx.save();ctx.translate(o.x,o.y);ctx.scale(o.scale||1,o.scale||1);if(o.type==='text'){ctx.font=(o.bold?'bold ':'')+o.size+'px "'+o.font+'"';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=o.color;wrapText(o.text,0,0,760,o.size*1.18)}else if(o.type==='shape'){ctx.fillStyle=o.color;if(o.shape==='circle'){ctx.beginPath();ctx.arc(0,0,o.size/2,0,Math.PI*2);ctx.fill()}else ctx.fillRect(-o.size/2,-o.size/2,o.size,o.size)}else if(o.type==='image'&&o.img){ctx.drawImage(o.img,-o.w/2,-o.h/2,o.w,o.h)}ctx.restore();if(i===selected){const b=bounds(o);ctx.save();ctx.strokeStyle='#647bff';ctx.lineWidth=3;ctx.setLineDash([8,6]);ctx.strokeRect(b.x,b.y,b.w,b.h);ctx.restore()}})}
+ items.forEach((o,i)=>{ctx.save();ctx.translate(o.x,o.y);ctx.scale(o.scale||1,o.scale||1);if(o.type==='text'){ctx.font=(o.bold?'bold ':'')+o.size+'px "'+o.font+'"';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=o.color;wrapText(o.text,0,0,760,o.size*1.18)}else if(o.type==='shape'){ctx.fillStyle=o.color;if(o.shape==='circle'){ctx.beginPath();ctx.arc(0,0,o.size/2,0,Math.PI*2);ctx.fill()}else ctx.fillRect(-o.size/2,-o.size/2,o.size,o.size)}else if(o.type==='image'&&o.img){ctx.drawImage(o.img,-o.w/2,-o.h/2,o.w,o.h)}ctx.restore();if(i===selected){const b=bounds(o);ctx.save();ctx.strokeStyle='#647bff';ctx.lineWidth=3;ctx.setLineDash([8,6]);ctx.strokeRect(b.x,b.y,b.w,b.h);ctx.restore()}})update3DPreview();
+}
+
+// Simulador visual 3D ligero: funciona localmente, sin servicios externos.
+const sim3dObject=document.getElementById('sim3dObject');
+const sim3dArt=document.getElementById('sim3dArt');
+const sim3dRotate=document.getElementById('sim3dRotate');
+function update3DPreview(){
+ if(!sim3dObject||!sim3dArt)return;
+ const kind=product.value;
+ sim3dObject.className='sim3d-object '+(kind==='hoodie'?'hoodie':kind==='mug'?'mug':kind==='tote'?'tote':kind==='square'?'square':'shirt');
+ try{sim3dArt.style.backgroundImage='url("'+canvas.toDataURL('image/png')+'")'}catch(e){sim3dArt.style.backgroundImage='none'}
+ const angle=Number(sim3dRotate?.value||-18);
+ sim3dObject.style.transform='rotateY('+angle+'deg) rotateX(3deg)';
+ const angleLabel=document.getElementById('sim3dAngle');if(angleLabel)angleLabel.textContent=angle+'°';
+}
+if(sim3dRotate)sim3dRotate.addEventListener('input',update3DPreview);
+
 function wrapText(text,x,y,maxWidth,lineHeight){const words=(text||'').split(/\s+/),lines=[];let line='';for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);const start=y-(lines.length-1)*lineHeight/2;lines.forEach((l,i)=>ctx.fillText(l,x,start+i*lineHeight))}
 function bounds(o){const w=o.type==='text'?Math.min(780,Math.max(120,(o.text||'').length*o.size*.55)):o.type==='image'?o.w:o.size;const h=o.type==='text'?o.size*2.2:o.type==='image'?o.h:o.size;return{x:o.x-w*(o.scale||1)/2,y:o.y-h*(o.scale||1)/2,w:w*(o.scale||1),h:h*(o.scale||1)}}
 function add(o){items.push(o);selected=items.length-1;sync();render()}
