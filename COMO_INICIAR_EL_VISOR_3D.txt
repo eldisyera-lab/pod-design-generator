@@ -1,0 +1,25 @@
+PRINTSTUDIO — INICIO DEL VISOR 3D
+
+IMPORTANTE:
+La nueva vista 3D utiliza módulos JavaScript locales. Por seguridad, Chrome no permite cargar correctamente estos módulos cuando se abre index.html directamente con doble clic.
+
+COMO INICIAR:
+1. Descomprime toda la carpeta ZIP.
+2. Comprueba que tienes Python 3 instalado.
+3. Haz doble clic en "Iniciar PrintStudio.bat".
+4. Se abrirá Chrome en http://127.0.0.1:8765.
+5. Deja abierta la ventana negra mientras utilizas PrintStudio.
+6. Para cerrar PrintStudio, cierra esa ventana.
+
+CARGAR UN MODELO:
+1. En el panel "Visor 3D de modelos reales", pulsa el selector de archivo GLB.
+2. Selecciona un modelo .glb guardado en tu ordenador.
+3. Arrastra sobre el modelo para girarlo y usa la rueda del ratón para acercar o alejar.
+4. Haz clic en la zona de la superficie donde quieres colocar el estampado.
+5. Pulsa "Actualizar estampado" después de cambiar el diseño en el lienzo.
+
+NOTAS:
+- Usa preferentemente archivos GLB con texturas integradas.
+- Un archivo GLB no garantiza por sí solo que toda la superficie sea imprimible. La colocación del estampado depende de la geometría.
+- La versión actual es una base de carga y proyección sobre mallas reales; todavía no incluye una biblioteca propia de modelos comerciales.
+- No abras index.html directamente: usa el archivo BAT para iniciar el servidor local.
