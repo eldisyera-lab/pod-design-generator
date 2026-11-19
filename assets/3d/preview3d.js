@@ -69,11 +69,10 @@ function init(){
   host.addEventListener('pointerup',()=>dragging=false);host.addEventListener('pointercancel',()=>dragging=false);
   host.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(.65,Math.min(1.6,zoom*(e.deltaY>0?.94:1.06)))},{passive:false});
   window.addEventListener('resize',resize);
-  document.getElementById('product').addEventListener('change',e=>{scene.remove(root);buildProduct(e.target.value)});
   const colorInput=document.getElementById('garmentColor');
   if(colorInput)colorInput.addEventListener('input',e=>{currentColor=e.target.value;scene.remove(root);buildProduct(currentProduct)});
   const reset=document.getElementById('reset3d');if(reset)reset.addEventListener('click',()=>{rotationY=-.25;rotationX=.03;zoom=1});
-  window.updatePrintStudio3D=()=>{if(texture){texture.needsUpdate=true}};
+  window.updatePrintStudio3D=()=>{const wanted=document.getElementById('product').value;if(wanted!==currentProduct){scene.remove(root);buildProduct(wanted)}if(texture){texture.needsUpdate=true}};
   window.updatePrintStudio3D();draw();
   document.getElementById('threeStatus').textContent='Vista 3D activa · arrastra para girar · rueda para acercar';
  }catch(err){console.error('PrintStudio 3D:',err);document.getElementById('threeStatus').textContent='No se pudo iniciar el visor 3D en este navegador.'}
