@@ -1,25 +1,40 @@
-PRINTSTUDIO — INICIO DEL VISOR 3D
+PRINTSTUDIO — VISOR 3D Y MODELOS
 
-IMPORTANTE:
-La nueva vista 3D utiliza módulos JavaScript locales. Por seguridad, Chrome no permite cargar correctamente estos módulos cuando se abre index.html directamente con doble clic.
-
-COMO INICIAR:
-1. Descomprime toda la carpeta ZIP.
-2. Comprueba que tienes Python 3 instalado.
+INICIO LOCAL
+1. Descomprime todo el ZIP.
+2. Necesitas Python 3 instalado en Windows.
 3. Haz doble clic en "Iniciar PrintStudio.bat".
-4. Se abrirá Chrome en http://127.0.0.1:8765.
-5. Deja abierta la ventana negra mientras utilizas PrintStudio.
-6. Para cerrar PrintStudio, cierra esa ventana.
+4. Chrome se abrirá en http://127.0.0.1:8765.
+5. Mantén abierta la ventana negra del servidor mientras trabajas.
+6. No abras index.html con doble clic: los módulos locales del visor requieren servidor local.
 
-CARGAR UN MODELO:
-1. En el panel "Visor 3D de modelos reales", pulsa el selector de archivo GLB.
-2. Selecciona un modelo .glb guardado en tu ordenador.
-3. Arrastra sobre el modelo para girarlo y usa la rueda del ratón para acercar o alejar.
-4. Haz clic en la zona de la superficie donde quieres colocar el estampado.
-5. Pulsa "Actualizar estampado" después de cambiar el diseño en el lienzo.
+CÓMO CARGAR UN MODELO
+1. Descarga un modelo en formato .GLB.
+2. En PrintStudio, en "Visor 3D de modelos reales", pulsa el selector de archivo.
+3. Selecciona el archivo GLB.
+4. Arrastra con el ratón para girar y usa la rueda para acercar/alejar.
+5. Elige el material de la prenda o producto en "Pieza / material" y cambia su color.
+6. Haz clic en la superficie donde quieras colocar el estampado.
+7. Ajusta el tamaño y pulsa "Actualizar estampado" después de modificar el diseño.
 
-NOTAS:
-- Usa preferentemente archivos GLB con texturas integradas.
-- Un archivo GLB no garantiza por sí solo que toda la superficie sea imprimible. La colocación del estampado depende de la geometría.
-- La versión actual es una base de carga y proyección sobre mallas reales; todavía no incluye una biblioteca propia de modelos comerciales.
-- No abras index.html directamente: usa el archivo BAT para iniciar el servidor local.
+MODELOS DE REFERENCIA Y LICENCIAS
+Estas son fuentes verificadas para descargar modelos. Revisa siempre la licencia de la página del modelo concreto y conserva la atribución cuando sea necesaria.
+
+- Camiseta detallada: https://sketchfab.com/3d-models/men-regular-apparel-fit-sporty-t-shirt-4d055bb8c1e04549a4b2dac7b27ebb2c
+  Autor: BINARYCLOTH. La página declara UV desplegado, materiales PBR, texturas 2K/4K y GLB de 2K. Licencia Creative Commons Attribution (CC BY): exige atribución al autor y enlace a la licencia.
+
+- Hoodie: https://sketchfab.com/3d-models/hoodie-97611a53e3b846f69e0655b210f72b2f
+  Autor: Virtual Pandora. Modelo de sudadera con capucha creado en CLO3D. Licencia Creative Commons Attribution (CC BY): exige atribución.
+
+- Taza cerámica escaneada: https://sketchfab.com/3d-models/ceramic-mug-3d-scan-503a06924a1f445fb51f69a29c5b239b
+  Autor: Negitropic. La página describe un escaneo de cerámica con textura. Licencia Creative Commons Attribution (CC BY): exige atribución.
+
+- Bolsa tote de lona: https://www.innerscene.com/tools/library/3d-parts/tote-bag-19ea2698
+  Modelo GLB de 7,4 MB con lona, forro, costuras, base y asas. Licencia CC0, según la página del modelo.
+
+- Taza de gres: https://www.innerscene.com/tools/library/3d-parts/mug-330-ml-stoneware-08330a7e
+  Modelo GLB con asa integrada y materiales. Licencia CC0, según la página del modelo.
+
+IMPORTANTE SOBRE LA CALIDAD
+Un modelo CC0 puede ser sencillo o estilizado; la licencia no garantiza realismo. Para un producto comercial conviene revisar geometría, UV, texturas, materiales y resolución antes de aprobarlo.
+El visor actual permite cargar mallas GLB y colocar un decal sobre la superficie seleccionada. Todavía hay que validar el comportamiento con cada modelo real: no todos los GLB tienen UV o geometría adecuados para imprimir en todas sus zonas.
