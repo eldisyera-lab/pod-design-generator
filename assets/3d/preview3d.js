@@ -23,13 +23,13 @@ function buildProduct(kind){
  garmentMaterial=material(currentColor,kind==='mug'?.22:.88);
  if(kind==='shirt'||kind==='hoodie'){
   shirtGeometry(kind==='hoodie');
-  texture=new T.CanvasTexture(document.getElementById('canvas'));texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=renderer.capabilities.getMaxAnisotropy();
+  texture=new T.CanvasTexture(document.getElementById('canvas'));texture.encoding=T.sRGBEncoding;texture.anisotropy=renderer.capabilities.getMaxAnisotropy();
   printMaterial=new T.MeshBasicMaterial({map:texture,transparent:true,side:T.DoubleSide,depthWrite:false});
   const art=new T.Mesh(new T.PlaneGeometry(1.08,1.3),printMaterial);art.position.set(0,-.02,.185);root.add(art);
  }else if(kind==='mug'){
   const body=new T.Mesh(new T.CylinderGeometry(.72,.68,1.12,96,1,false),material(currentColor,.2));body.rotation.z=Math.PI/2;body.position.set(-.08,0,0);root.add(body);
   const handle=new T.Mesh(new T.TorusGeometry(.34,.095,18,64,Math.PI*2),material(currentColor,.2));handle.position.set(.7,.02,0);handle.rotation.y=Math.PI/2;root.add(handle);
-  texture=new T.CanvasTexture(document.getElementById('canvas'));texture.colorSpace=T.SRGBColorSpace;texture.wrapS=T.RepeatWrapping;texture.anisotropy=renderer.capabilities.getMaxAnisotropy();
+  texture=new T.CanvasTexture(document.getElementById('canvas'));texture.encoding=T.sRGBEncoding;texture.wrapS=T.RepeatWrapping;texture.anisotropy=renderer.capabilities.getMaxAnisotropy();
   const print=new T.Mesh(new T.CylinderGeometry(.724,.684,1.0,96,1,true,Math.PI*.12,Math.PI*1.45),new T.MeshBasicMaterial({map:texture,transparent:true,side:T.DoubleSide,depthWrite:false}));
   print.rotation.z=Math.PI/2;print.position.set(-.08,0,0);root.add(print);
  }else if(kind==='tote'){
@@ -58,7 +58,7 @@ function init(){
  try{
   scene=new T.Scene();scene.background=new T.Color('#1b2940');
   camera=new T.PerspectiveCamera(34,1,.1,100);
-  renderer=new T.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;host.appendChild(renderer.domElement);
+  renderer=new T.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.outputEncoding=T.sRGBEncoding;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;host.appendChild(renderer.domElement);
   scene.add(new T.HemisphereLight(0xffffff,0x536078,2.0));
   const key=new T.DirectionalLight(0xffffff,3.0);key.position.set(-3,4,5);scene.add(key);
   const fill=new T.DirectionalLight(0xb7caff,1.3);fill.position.set(4,1,3);scene.add(fill);
