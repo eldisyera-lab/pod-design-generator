@@ -20,11 +20,13 @@ aside{background:var(--panel);padding:18px;border-right:1px solid var(--line)}.r
 .sim3d-face{position:absolute;inset:0;overflow:hidden;background:linear-gradient(110deg,#f7f7f7 0%,#d9dde4 48%,#aeb7c5 100%);box-shadow:inset -10px 0 18px #0002,inset 8px 0 14px #fff8}
 .sim3d-art{position:absolute;left:27%;top:27%;width:46%;height:48%;background-position:center;background-repeat:no-repeat;background-size:contain;mix-blend-mode:multiply;opacity:.96}
 .sim3d-object.shirt .sim3d-face{clip-path:polygon(25% 0,40% 7%,60% 7%,75% 0,100% 22%,84% 42%,74% 32%,74% 100%,26% 100%,26% 32%,16% 42%,0 22%)}
-.sim3d-object.hoodie .sim3d-face{clip-path:polygon(25% 0,38% 4%,62% 4%,75% 0,100% 22%,84% 42%,74% 32%,74% 100%,26% 100%,26% 32%,16% 42%,0 22%);background:linear-gradient(100deg,#d7dce5,#f3f4f6 45%,#aeb8c7)}
+.sim3d-object.hoodie:before{content:"";position:absolute;z-index:2;left:42px;top:0;width:66px;height:52px;border:9px solid #c5ccd7;border-bottom:0;border-radius:34px 34px 10px 10px;background:linear-gradient(110deg,#aeb8c7,#e8ebf0 55%,#aeb8c7);box-shadow:inset 0 0 0 3px #ffffff55}
+.sim3d-object.hoodie .sim3d-face{inset:28px 0 0;clip-path:polygon(24% 0,40% 5%,60% 5%,76% 0,100% 22%,84% 42%,74% 32%,74% 100%,26% 100%,26% 32%,16% 42%,0 22%);background:linear-gradient(100deg,#b9c2cf 0%,#f5f6f8 44%,#aab5c4 100%);box-shadow:inset -12px 0 18px #0002,inset 10px 0 14px #fff8}
+.sim3d-object.hoodie:after{content:"";position:absolute;z-index:4;left:50%;bottom:25px;width:52px;height:23px;transform:translateX(-50%) translateZ(2px);border:2px solid #aeb8c6;border-top:0;border-radius:0 0 14px 14px;background:linear-gradient(90deg,transparent 48%,#aeb8c6 49%,#aeb8c6 51%,transparent 52%);box-shadow:inset 0 4px 5px #0001}
 .sim3d-object.tote{width:148px;height:160px;margin-top:22px}
 .sim3d-object.tote .sim3d-face{inset:22px 0 0;clip-path:polygon(8% 0,92% 0,100% 100%,0 100%);border-radius:3px}
 .sim3d-object.tote:before{content:"";position:absolute;left:42px;top:0;width:64px;height:48px;border:8px solid #c7ced9;border-bottom:0;border-radius:30px 30px 0 0;transform:translateZ(-2px)}
-.sim3d-object.tote .sim3d-art{top:42%;height:40%}
+.sim3d-object.tote .sim3d-art{left:16%;top:20%;width:68%;height:60%;background-size:contain;opacity:1}
 .sim3d-object.mug{width:142px;height:112px;margin-right:22px}
 .sim3d-object.mug .sim3d-face{inset:5px 18px 5px 0;border-radius:8px 12px 18px 18px;background:linear-gradient(90deg,#9ca8b8,#f9fafb 24%,#e5e7eb 72%,#9aa6b6);transform:translateZ(0)}
 .sim3d-object.mug:after{content:"";position:absolute;right:0;top:28px;width:42px;height:50px;border:11px solid #cbd5e1;border-left:0;border-radius:0 28px 28px 0;transform:translateZ(-3px)}
