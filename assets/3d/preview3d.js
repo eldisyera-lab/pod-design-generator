@@ -1,81 +1,26 @@
-(function(){
-'use strict';
-let scene,camera,renderer,root,texture,printMaterial,garmentMaterial,frameId=0;
-let dragging=false,lastX=0,lastY=0,rotationY=-0.25,rotationX=0.03,zoom=1.0;
-let currentProduct='shirt',currentColor='#e7e9ed',host;
-const T=window.THREE;
-function shape(points){const s=new T.Shape();s.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)s.lineTo(points[i][0],points[i][1]);s.closePath();return s}
-function material(color,roughness){return new T.MeshStandardMaterial({color,roughness:roughness==null?.78:roughness,metalness:0.01})}
-function addMesh(g,m,x,y,z){const o=new T.Mesh(g,m);o.position.set(x||0,y||0,z||0);root.add(o);return o}
-function shirtGeometry(isHoodie){
- const p=[[-.72,-1.25],[.72,-1.25],[.72,.66],[1.05,.22],[1.34,.58],[.92,1.12],[.48,.91],[.28,1.24],[-.28,1.24],[-.48,.91],[-.92,1.12],[-1.34,.58],[-1.05,.22],[-.72,.66]];
- const g=new T.ExtrudeGeometry(shape(p),{depth:.16,bevelEnabled:true,bevelSegments:4,steps:1,bevelSize:.055,bevelThickness:.045,curveSegments:12});
- g.computeVertexNormals();addMesh(g,garmentMaterial,0,0,-.08);
- if(isHoodie){
-  const hood= new T.ExtrudeGeometry(shape([[-.36,1.05],[-.32,1.43],[-.2,1.65],[0,1.72],[.2,1.65],[.32,1.43],[.36,1.05],[.22,.98],[0,1.12],[-.22,.98]]),{depth:.13,bevelEnabled:true,bevelSegments:4,bevelSize:.035,bevelThickness:.03});
-  addMesh(hood,material(currentColor,.9),0,0,.04);
-  const pocket=new T.Mesh(new T.BoxGeometry(.74,.34,.035),material(currentColor,.88));pocket.position.set(0,-.65,.145);root.add(pocket);
-  const seam=new T.Mesh(new T.BoxGeometry(.76,.018,.012),material('#aab1bb',.9));seam.position.set(0,-.48,.17);root.add(seam);
- }
-}
-function buildProduct(kind){
- currentProduct=kind;root=new T.Group();scene.add(root);
- garmentMaterial=material(currentColor,kind==='mug'?.22:.88);
- if(kind==='shirt'||kind==='hoodie'){
-  shirtGeometry(kind==='hoodie');
-  texture=new T.CanvasTexture(document.getElementById('canvas'));texture.encoding=T.sRGBEncoding;texture.anisotropy=renderer.capabilities.getMaxAnisotropy();
-  printMaterial=new T.MeshBasicMaterial({map:texture,transparent:true,side:T.DoubleSide,depthWrite:false});
-  const art=new T.Mesh(new T.PlaneGeometry(1.08,1.3),printMaterial);art.position.set(0,-.02,.185);root.add(art);
- }else if(kind==='mug'){
-  const body=new T.Mesh(new T.CylinderGeometry(.72,.68,1.12,96,1,false),material(currentColor,.2));body.rotation.z=Math.PI/2;body.position.set(-.08,0,0);root.add(body);
-  const handle=new T.Mesh(new T.TorusGeometry(.34,.095,18,64,Math.PI*2),material(currentColor,.2));handle.position.set(.7,.02,0);handle.rotation.y=Math.PI/2;root.add(handle);
-  texture=new T.CanvasTexture(document.getElementById('canvas'));texture.encoding=T.sRGBEncoding;texture.wrapS=T.RepeatWrapping;texture.anisotropy=renderer.capabilities.getMaxAnisotropy();
-  const print=new T.Mesh(new T.CylinderGeometry(.724,.684,1.0,96,1,true,Math.PI*.12,Math.PI*1.45),new T.MeshBasicMaterial({map:texture,transparent:true,side:T.DoubleSide,depthWrite:false}));
-  print.rotation.z=Math.PI/2;print.position.set(-.08,0,0);root.add(print);
- }else if(kind==='tote'){
-  const body=addMesh(new T.BoxGeometry(1.65,1.8,.18),material(currentColor,.95),0,-.05,0);
-  const edge=addMesh(new T.BoxGeometry(1.68,1.82,.04),material('#b8b2a7',.98),0,-.05,-.105);
-  const curve=new T.CatmullRomCurve3([new T.Vector3(-.48,.82,0),new T.Vector3(-.46,1.48,0),new T.Vector3(0,1.58,0),new T.Vector3(.46,1.48,0),new T.Vector3(.48,.82,0)]);
-  addMesh(new T.TubeGeometry(curve,48,.055,12,false),material(currentColor,.98));
-  texture=new T.CanvasTexture(document.getElementById('canvas'));texture.colorSpace=T.SRGBColorSpace;
-  const art=new T.Mesh(new T.PlaneGeometry(1.25,1.4),new T.MeshBasicMaterial({map:texture,transparent:true,side:T.DoubleSide,depthWrite:false}));art.position.set(0,-.04,.103);root.add(art);
- }else{
-  addMesh(new T.BoxGeometry(1.85,1.85,.16),material('#aeb7c5',.85));
-  texture=new T.CanvasTexture(document.getElementById('canvas'));texture.colorSpace=T.SRGBColorSpace;
-  const art=new T.Mesh(new T.PlaneGeometry(1.72,1.72),new T.MeshBasicMaterial({map:texture,transparent:true,side:T.DoubleSide}));art.position.z=.09;root.add(art);
- }
-}
-function resize(){if(!renderer||!host)return;const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
-function draw(){
- if(!renderer)return;
- root.rotation.y=rotationY;root.rotation.x=rotationX;
- camera.position.set(0,0,4.4/zoom);camera.lookAt(0,0,0);
- renderer.render(scene,camera);frameId=requestAnimationFrame(draw);
-}
-function init(){
- if(!T||!document.getElementById('threePreview'))return;
- host=document.getElementById('threePreview');
- try{
-  scene=new T.Scene();scene.background=new T.Color('#1b2940');
-  camera=new T.PerspectiveCamera(34,1,.1,100);
-  renderer=new T.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.outputEncoding=T.sRGBEncoding;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;host.appendChild(renderer.domElement);
-  scene.add(new T.HemisphereLight(0xffffff,0x536078,2.0));
-  const key=new T.DirectionalLight(0xffffff,3.0);key.position.set(-3,4,5);scene.add(key);
-  const fill=new T.DirectionalLight(0xb7caff,1.3);fill.position.set(4,1,3);scene.add(fill);
-  const rim=new T.DirectionalLight(0xffffff,2);rim.position.set(0,3,-4);scene.add(rim);
-  buildProduct(document.getElementById('product').value);resize();
-  host.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;host.setPointerCapture(e.pointerId)});
-  host.addEventListener('pointermove',e=>{if(!dragging)return;rotationY+=(e.clientX-lastX)*.009;rotationX=Math.max(-.35,Math.min(.35,rotationX+(e.clientY-lastY)*.005));lastX=e.clientX;lastY=e.clientY});
-  host.addEventListener('pointerup',()=>dragging=false);host.addEventListener('pointercancel',()=>dragging=false);
-  host.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(.65,Math.min(1.6,zoom*(e.deltaY>0?.94:1.06)))},{passive:false});
-  window.addEventListener('resize',resize);
-  const colorInput=document.getElementById('garmentColor');
-  if(colorInput)colorInput.addEventListener('input',e=>{currentColor=e.target.value;scene.remove(root);buildProduct(currentProduct)});
-  const reset=document.getElementById('reset3d');if(reset)reset.addEventListener('click',()=>{rotationY=-.25;rotationX=.03;zoom=1});
-  window.updatePrintStudio3D=()=>{const wanted=document.getElementById('product').value;if(wanted!==currentProduct){scene.remove(root);buildProduct(wanted)}if(texture){texture.needsUpdate=true}};
-  window.updatePrintStudio3D();draw();
-  document.getElementById('threeStatus').textContent='Vista 3D activa · arrastra para girar · rueda para acercar';
- }catch(err){console.error('PrintStudio 3D:',err);document.getElementById('threeStatus').textContent='No se pudo iniciar el visor 3D en este navegador.'}
-}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
-})();
+import * as THREE from "../vendor/three.module.min.js";
+import {GLTFLoader} from "./loaders/GLTFLoader.js";
+import {DecalGeometry} from "./geometries/DecalGeometry.js";
+const host=document.getElementById("threePreview"),canvas=document.getElementById("canvas"),fileInput=document.getElementById("modelFile"),colorInput=document.getElementById("garmentColor"),sizeInput=document.getElementById("printSize"),status=document.getElementById("threeStatus");
+const scene=new THREE.Scene();scene.background=new THREE.Color("#202a38");
+const camera=new THREE.PerspectiveCamera(35,1,.01,1000),renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;host.replaceChildren(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff,0x697386,2));const key=new THREE.DirectionalLight(0xffffff,3);key.position.set(-3,5,5);scene.add(key);const fill=new THREE.DirectionalLight(0xc8d8ff,1.4);fill.position.set(4,1,3);scene.add(fill);
+let root=null,meshes=[],decals=[],target=new THREE.Vector3(),distance=4,yaw=-.25,pitch=.08,down=null,drag=false,lx=0,ly=0;
+const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
+const say=s=>status.textContent=s;
+function resize(){let w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+function frame(){camera.position.set(target.x+distance*Math.sin(yaw)*Math.cos(pitch),target.y+distance*Math.sin(pitch),target.z+distance*Math.cos(yaw)*Math.cos(pitch));camera.lookAt(target);renderer.render(scene,camera);requestAnimationFrame(frame)}
+function clear(){decals.forEach(d=>{scene.remove(d);d.geometry.dispose();d.material.map?.dispose();d.material.dispose()});decals=[];if(root){scene.remove(root);root.traverse(o=>{if(o.isMesh){o.geometry.dispose();(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose())}})}root=null;meshes=[]}
+function fit(){let b=new THREE.Box3().setFromObject(root),s=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3()),max=Math.max(s.x,s.y,s.z)||1;root.position.sub(c);target.set(0,0,0);distance=max*2.7;camera.near=max/1000;camera.far=max*100;camera.updateProjectionMatrix()}
+function recolor(hex){if(!root)return;let c=new THREE.Color(hex);meshes.forEach(o=>(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(m.color)m.color.copy(c)}))}
+function tex(){let t=new THREE.CanvasTexture(canvas);t.encoding=THREE.sRGBEncoding;t.anisotropy=renderer.capabilities.getMaxAnisotropy();return t}
+function place(x,y){if(!root)return;let r=renderer.domElement.getBoundingClientRect();pointer.set((x-r.left)/r.width*2-1,-((y-r.top)/r.height*2-1));ray.setFromCamera(pointer,camera);let hits=ray.intersectObjects(meshes,false);if(!hits.length){say("Haz clic sobre la superficie del producto.");return}let h=hits[0],n=h.face.normal.clone().transformDirection(h.object.matrixWorld),q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),n),e=new THREE.Euler().setFromQuaternion(q),v=Number(sizeInput.value||.7),g=new DecalGeometry(h.object,h.point.clone().addScaledVector(n,.002),e,new THREE.Vector3(v,v,v*.3)),m=new THREE.MeshBasicMaterial({map:tex(),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,side:THREE.DoubleSide}),d=new THREE.Mesh(g,m);scene.add(d);decals.push(d);say("Estampado colocado. Pulsa «Actualizar estampado» cuando cambies el lienzo.")}
+function update(){if(!decals.length){say("Carga un GLB y haz clic en la superficie para colocar el estampado.");return}let t=tex();decals.forEach(d=>{d.material.map?.dispose();d.material.map=t;d.material.needsUpdate=true});say("Estampado actualizado desde el lienzo.")}
+fileInput.addEventListener("change",e=>{let f=e.target.files[0];if(!f)return;if(!f.name.toLowerCase().endsWith(".glb")){say("Selecciona un archivo .GLB con texturas integradas.");return}say("Cargando modelo…");let rd=new FileReader();rd.onload=()=>new GLTFLoader().parse(rd.result,"",g=>{clear();root=g.scene;scene.add(root);root.traverse(o=>{if(o.isMesh)meshes.push(o)});fit();recolor(colorInput.value);say("Modelo cargado: "+f.name+". Arrastra para girar y haz clic en la superficie para estampar.")},err=>{console.error(err);say("No se pudo leer el GLB o sus texturas.")});rd.readAsArrayBuffer(f)});
+colorInput.addEventListener("input",e=>recolor(e.target.value));document.getElementById("updatePrintBtn").addEventListener("click",update);
+document.getElementById("reset3d").addEventListener("click",()=>{if(root){fit();say("Vista restablecida.")}else say("Carga primero un modelo GLB.")});
+host.addEventListener("pointerdown",e=>{down={x:e.clientX,y:e.clientY,m:0};drag=true;lx=e.clientX;ly=e.clientY;host.setPointerCapture(e.pointerId)});
+host.addEventListener("pointermove",e=>{if(!drag)return;let dx=e.clientX-lx,dy=e.clientY-ly;down.m+=Math.abs(dx)+Math.abs(dy);yaw-=dx*.008;pitch=Math.max(-1.35,Math.min(1.35,pitch+dy*.006));lx=e.clientX;ly=e.clientY});
+host.addEventListener("pointerup",e=>{if(drag&&down&&down.m<7)place(e.clientX,e.clientY);drag=false;down=null});host.addEventListener("pointercancel",()=>{drag=false;down=null});
+host.addEventListener("wheel",e=>{e.preventDefault();distance=Math.max(.15,Math.min(1000,distance*(e.deltaY>0?1.08:.92)))},{passive:false});
+window.addEventListener("resize",resize);window.updatePrintStudio3D=update;resize();frame();say("Visor listo. Carga un modelo .GLB; no se utilizan maquetas geométricas ficticias.");
