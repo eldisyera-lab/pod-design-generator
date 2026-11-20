@@ -10,16 +10,41 @@ const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
 const say=s=>status.textContent=s;
 function resize(){let w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
 function frame(){camera.position.set(target.x+distance*Math.sin(yaw)*Math.cos(pitch),target.y+distance*Math.sin(pitch),target.z+distance*Math.cos(yaw)*Math.cos(pitch));camera.lookAt(target);renderer.render(scene,camera);requestAnimationFrame(frame)}
-function clear(){decals.forEach(d=>{scene.remove(d);d.geometry.dispose();d.material.map?.dispose();d.material.dispose()});decals=[];if(root){scene.remove(root);root.traverse(o=>{if(o.isMesh){o.geometry.dispose();(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose())}})}root=null;meshes=[]}
-function fit(){yaw=-.25;pitch=.08;let b=new THREE.Box3().setFromObject(root),s=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3()),max=Math.max(s.x,s.y,s.z)||1;root.position.sub(c);target.set(0,0,0);distance=max*2.7;camera.near=max/1000;camera.far=max*100;camera.updateProjectionMatrix()}
+function removePrints(showMessage=true){
+  const textures=new Set();
+  decals.forEach(d=>{
+    scene.remove(d);
+    d.geometry.dispose();
+    if(d.material.map)textures.add(d.material.map);
+    d.material.dispose();
+  });
+  textures.forEach(t=>t.dispose());
+  const count=decals.length;
+  decals=[];
+  if(showMessage)say(count?"Se han eliminado "+count+" estampado(s). El modelo y el lienzo 2D se mantienen.":"No hay estampados que eliminar.");
+}
+function clear(){
+  removePrints(false);
+  if(root){scene.remove(root);root.traverse(o=>{if(o.isMesh){o.geometry.dispose();(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose())}})}
+  root=null;meshes=[];materials=[];
+}
+function fit(){
+  if(!root)return;
+  root.updateMatrixWorld(true);
+  const b=new THREE.Box3().setFromObject(root),s=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3());
+  const max=Math.max(s.x,s.y,s.z)||1;
+  yaw=-.25;pitch=.08;target.copy(c);distance=max*2.7;
+  camera.near=Math.max(max/1000,.001);camera.far=Math.max(max*100,10);camera.updateProjectionMatrix();
+}
 function populateMaterials(){materials=[];materialSelect.innerHTML='<option value="-1">Todos los materiales</option>';let seen=new Set();meshes.forEach(mesh=>(Array.isArray(mesh.material)?mesh.material:[mesh.material]).forEach((mat,i)=>{if(!mat||seen.has(mat))return;seen.add(mat);materials.push(mat);let op=document.createElement("option");op.value=String(materials.length-1);op.textContent=(mesh.name||"Malla")+(mat.name?" · "+mat.name:" · material "+(i+1));materialSelect.appendChild(op)}));if(materials.length)materialSelect.value="0";}
 function recolor(hex){if(!root)return;let c=new THREE.Color(hex),idx=Number(materialSelect.value),targets=idx<0?materials:[materials[idx]].filter(Boolean);targets.forEach(m=>{if(m.color)m.color.copy(c);m.needsUpdate=true})}
 function tex(){let t=new THREE.CanvasTexture(canvas);t.encoding=THREE.sRGBEncoding;t.anisotropy=renderer.capabilities.getMaxAnisotropy();return t}
 function place(x,y){if(!root)return;let r=renderer.domElement.getBoundingClientRect();pointer.set((x-r.left)/r.width*2-1,-((y-r.top)/r.height*2-1));ray.setFromCamera(pointer,camera);let hits=ray.intersectObjects(meshes,false);if(!hits.length){say("Haz clic sobre la superficie del producto.");return}let h=hits[0],n=h.face.normal.clone().transformDirection(h.object.matrixWorld),q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),n),e=new THREE.Euler().setFromQuaternion(q),v=Number(sizeInput.value||.7),g=new DecalGeometry(h.object,h.point.clone().addScaledVector(n,.002),e,new THREE.Vector3(v,v*(canvas.height/canvas.width),Math.max(.04,v*.3))),m=new THREE.MeshBasicMaterial({map:tex(),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,side:THREE.DoubleSide}),d=new THREE.Mesh(g,m);scene.add(d);decals.push(d);say("Estampado colocado. Pulsa «Actualizar estampado» cuando cambies el lienzo.")}
-function update(){if(!decals.length){say("Carga un GLB y haz clic en la superficie para colocar el estampado.");return}let t=tex();decals.forEach(d=>{d.material.map?.dispose();d.material.map=t;d.material.needsUpdate=true});say("Estampado actualizado desde el lienzo.")}
+function update(){if(!decals.length){say("Primero carga un GLB y haz clic en la superficie para colocar el estampado.");return}let t=tex();decals.forEach(d=>{d.material.map?.dispose();d.material.map=t;d.material.needsUpdate=true});say("Estampado actualizado desde el lienzo.")}
 fileInput.addEventListener("change",e=>{let f=e.target.files[0];if(!f)return;if(!f.name.toLowerCase().endsWith(".glb")){say("Selecciona un archivo .GLB con texturas integradas.");return}say("Cargando modelo…");let rd=new FileReader();rd.onload=()=>new GLTFLoader().parse(rd.result,"",g=>{clear();root=g.scene;scene.add(root);root.traverse(o=>{if(o.isMesh)meshes.push(o)});populateMaterials();fit();recolor(colorInput.value);say("Modelo cargado: "+f.name+". Arrastra para girar y haz clic en la superficie para estampar.")},err=>{console.error(err);say("No se pudo leer el GLB o sus texturas.")});rd.readAsArrayBuffer(f)});
 colorInput.addEventListener("input",e=>recolor(e.target.value));materialSelect.addEventListener("change",()=>recolor(colorInput.value));document.getElementById("updatePrintBtn").addEventListener("click",update);
-document.getElementById("reset3d").addEventListener("click",()=>{if(root){fit();say("Vista restablecida.")}else say("Carga primero un modelo GLB.")});
+document.getElementById("reset3d").addEventListener("click",()=>{if(root){fit();say("Vista restablecida. El modelo y los estampados se han conservado.")}else say("Carga primero un modelo GLB.")});
+document.getElementById("clearPrintsBtn").addEventListener("click",()=>removePrints(true));
 host.addEventListener("pointerdown",e=>{down={x:e.clientX,y:e.clientY,m:0};drag=true;lx=e.clientX;ly=e.clientY;host.setPointerCapture(e.pointerId)});
 host.addEventListener("pointermove",e=>{if(!drag)return;let dx=e.clientX-lx,dy=e.clientY-ly;down.m+=Math.abs(dx)+Math.abs(dy);yaw-=dx*.008;pitch=Math.max(-1.35,Math.min(1.35,pitch+dy*.006));lx=e.clientX;ly=e.clientY});
 host.addEventListener("pointerup",e=>{if(drag&&down&&down.m<7)place(e.clientX,e.clientY);drag=false;down=null});host.addEventListener("pointercancel",()=>{drag=false;down=null});
