@@ -34,7 +34,7 @@ aside{background:var(--panel);padding:18px;border-right:1px solid var(--line)}.r
 <main class="workspace"><div class="worktop"><span>LIENZO DE DISEÑO</span><span id="selectionLabel">Ningún elemento seleccionado</span></div><div class="stage"><div class="artboard"><canvas id="canvas" width="900" height="1080"></canvas></div></div><div class="hint">Selecciona y arrastra los elementos para colocarlos · Usa el panel derecho para editarlos</div><div class="status" id="status"></div></main>
 <aside class="right"><section class="group"><h2>Editar elemento</h2><label>Texto</label><textarea id="textValue" rows="3" placeholder="Selecciona un texto para editarlo"></textarea><label>Tipografía</label><select id="font"><option>Arial</option><option>Georgia</option><option>Impact</option><option>Verdana</option><option>Trebuchet MS</option><option>Courier New</option></select><div class="row"><div><label>Tamaño</label><input id="fontSize" type="number" min="12" max="260" value="90"></div><div><label>Color</label><input id="color" type="color" value="#172033"></div></div><label>Escala del elemento</label><input id="scale" type="range" min=".2" max="2.5" step=".05" value="1"><div class="row"><button class="btn" id="boldBtn">Negrita</button><button class="btn" id="deleteBtn">Eliminar</button></div></section>
 <section class="group"><h2>Color rápido</h2><div class="swatches" id="swatches"></div><label>Capas</label><div class="row"><button class="btn" id="backBtn">Enviar atrás</button><button class="btn" id="frontBtn">Traer delante</button></div></section>
-<section><h2>Visor 3D de modelos reales</h2><div class="sim3d"><div id="threePreview" class="three-preview"></div><div class="three-tools"><label>Modelo 3D (.GLB)<input id="modelFile" type="file" accept=".glb,model/gltf-binary"></label></div><div class="three-tools"><label for="materialSelect">Pieza / material<select id="materialSelect"><option value="-1">Todos los materiales</option></select></label><label for="garmentColor">Color del material<input id="garmentColor" type="color" value="#e7e9ed"></label><label for="printSize">Tamaño del estampado<input id="printSize" type="range" min="0.15" max="1.8" step="0.05" value="0.7"></label></div><div class="three-tools"><button class="btn" id="updatePrintBtn" type="button">Actualizar estampado</button><button class="btn" id="clearPrintsBtn" type="button">Eliminar estampados</button><button class="btn" id="reset3d" type="button">Restablecer vista</button></div><div class="sim3d-caption" id="threeStatus">Carga un modelo GLB para iniciar la vista.</div></div><p class="small">El estampado se coloca haciendo clic sobre la superficie del modelo. Se recomienda GLB con texturas integradas.</p></section></aside>
+<section><h2>Visor 3D de modelos reales</h2><div class="sim3d"><div id="threePreview" class="three-preview"></div><div class="three-tools"><label>Modelo 3D (.GLB)<input id="modelFile" type="file" accept=".glb,model/gltf-binary"></label></div><div class="three-tools"><button class="btn" id="updatePrintBtn" type="button">Actualizar estampado</button><button class="btn" id="clearPrintsBtn" type="button">Eliminar estampados</button><button class="btn" id="reset3d" type="button">Restablecer vista</button></div><div class="three-tools"><label for="materialSelect">Pieza / material<select id="materialSelect"><option value="-1">Todos los materiales</option></select></label><label for="garmentColor">Color del material<input id="garmentColor" type="color" value="#e7e9ed"></label><label for="printSize">Tamaño del estampado<input id="printSize" type="range" min="0.15" max="1.8" step="0.05" value="0.7"></label></div><div class="sim3d-caption" id="threeStatus">Carga un modelo GLB para iniciar la vista.</div></div><p class="small">El estampado se coloca haciendo clic sobre la superficie del modelo. Se recomienda GLB con texturas integradas.</p></section></aside>
 </div>
 <script>
 const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');let items=[],selected=-1,drag=null,transparent=false,bg='#ffffff';
@@ -47,6 +47,28 @@ function render(){ctx.clearRect(0,0,canvas.width,canvas.height);if(!transparent)
 }
 
 // El visor 3D se gestiona en su módulo independiente.
+
+function createPrintTextureCanvas(){
+ const out=document.createElement('canvas');out.width=canvas.width;out.height=canvas.height;
+ const c=out.getContext('2d');
+ items.forEach(o=>{
+  c.save();c.translate(o.x,o.y);c.scale(o.scale||1,o.scale||1);
+  if(o.type==='text'){c.font=(o.bold?'bold ':'')+o.size+'px "'+o.font+'"';c.textAlign='center';c.textBaseline='middle';c.fillStyle=o.color;wrapTextOn(c,o.text,0,0,760,o.size*1.18)}
+  else if(o.type==='shape'){c.fillStyle=o.color;if(o.shape==='circle'){c.beginPath();c.arc(0,0,o.size/2,0,Math.PI*2);c.fill()}else c.fillRect(-o.size/2,-o.size/2,o.size,o.size)}
+  else if(o.type==='image'&&o.img)c.drawImage(o.img,-o.w/2,-o.h/2,o.w,o.h);
+  c.restore();
+ });
+ const data=c.getImageData(0,0,out.width,out.height).data;let minX=out.width,minY=out.height,maxX=-1,maxY=-1;
+ for(let y=0;y<out.height;y++)for(let x=0;x<out.width;x++){if(data[(y*out.width+x)*4+3]>0){if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y}}
+ if(maxX<minX)return out;
+ const pad=Math.max(8,Math.round(Math.max(maxX-minX+1,maxY-minY+1)*.035));
+ minX=Math.max(0,minX-pad);minY=Math.max(0,minY-pad);maxX=Math.min(out.width-1,maxX+pad);maxY=Math.min(out.height-1,maxY+pad);
+ const cropped=document.createElement('canvas');cropped.width=maxX-minX+1;cropped.height=maxY-minY+1;
+ cropped.getContext('2d').drawImage(out,minX,minY,cropped.width,cropped.height,0,0,cropped.width,cropped.height);
+ return cropped;
+}
+function wrapTextOn(c,text,x,y,maxWidth,lineHeight){const words=(text||'').split(/\\s+/),lines=[];let line='';for(const word of words){const test=line?line+' '+word:word;if(c.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);const start=y-(lines.length-1)*lineHeight/2;lines.forEach((l,i)=>c.fillText(l,x,start+i*lineHeight))}
+window.createPrintTextureCanvas=createPrintTextureCanvas;
 
 function wrapText(text,x,y,maxWidth,lineHeight){const words=(text||'').split(/\s+/),lines=[];let line='';for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);const start=y-(lines.length-1)*lineHeight/2;lines.forEach((l,i)=>ctx.fillText(l,x,start+i*lineHeight))}
 function bounds(o){const w=o.type==='text'?Math.min(780,Math.max(120,(o.text||'').length*o.size*.55)):o.type==='image'?o.w:o.size;const h=o.type==='text'?o.size*2.2:o.type==='image'?o.h:o.size;return{x:o.x-w*(o.scale||1)/2,y:o.y-h*(o.scale||1)/2,w:w*(o.scale||1),h:h*(o.scale||1)}}
