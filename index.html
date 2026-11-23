@@ -91,7 +91,21 @@ function sync(){const o=items[selected];document.getElementById('selectionLabel'
 document.getElementById('addText').onclick=()=>add({type:'text',text:'Tu diseño aquí',x:canvas.width/2,y:canvas.height/2,size:90,font:'Arial',color:'#172033',bold:true,scale:1});
 document.getElementById('addShape').onclick=()=>add({type:'shape',shape:'circle',x:canvas.width/2,y:canvas.height/2,size:180,color:'#8b9cfb',scale:1});
 document.getElementById('imageInput').onchange=e=>{const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f),im=new Image();im.onload=()=>{const ratio=Math.min(500/im.width,500/im.height);const o={type:'image',img:im,originalImg:im,x:canvas.width/2,y:canvas.height/2,w:im.width*ratio,h:im.height*ratio,scale:1,color:'#ffffff'};add(o);say('Imagen cargada.');URL.revokeObjectURL(url)};im.src=url};
-['textValue','font','fontSize','color','scale'].forEach(id=>document.getElementById(id).addEventListener('input',e=>{const o=items[selected];if(!o)return;if(id==='textValue'&&o.type==='text')o.text=e.target.value;if(id==='font')o.font=e.target.value;if(id==='fontSize')o.size=+e.target.value;if(id==='color')o.color=e.target.value;if(id==='scale'){o.scale=+e.target.value;document.getElementById('scaleValue').textContent=Math.round(o.scale*100)+'%'}render()}));
+['textValue','font','fontSize','color','scale'].forEach(id=>document.getElementById(id).addEventListener('input',e=>{
+ const o=items[selected];if(!o)return;
+ if(id==='textValue'&&o.type==='text')o.text=e.target.value;
+ if(id==='font')o.font=e.target.value;
+ if(id==='fontSize')o.size=+e.target.value;
+ if(id==='color')o.color=e.target.value;
+ if(id==='scale'){
+  o.scale=+e.target.value;
+  const label=Math.round(o.scale*100)+'%';
+  document.getElementById('scaleValue').textContent=label;
+  document.getElementById('canvasScale').value=o.scale;
+  document.getElementById('canvasScaleValue').textContent=label;
+ }
+ render();
+}));
 document.getElementById('canvasScale').addEventListener('input',e=>{const o=items[selected];if(!o)return;o.scale=Number(e.target.value);document.getElementById('canvasScaleValue').textContent=Math.round(o.scale*100)+'%';document.getElementById('scale').value=o.scale;document.getElementById('scaleValue').textContent=Math.round(o.scale*100)+'%';render()});
 document.getElementById('boldBtn').onclick=()=>{if(items[selected]?.type==='text'){items[selected].bold=!items[selected].bold;sync();render()}};
 document.getElementById('deleteBtn').onclick=()=>{if(selected>=0){items.splice(selected,1);selected=-1;sync();render()}};
