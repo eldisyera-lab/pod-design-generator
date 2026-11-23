@@ -70,6 +70,10 @@ function createPrintTextureCanvas(){
  minY=Math.max(0,Math.min(canvas.height-cropH,cy-cropH/2));
  maxX=minX+cropW;maxY=minY+cropH;
  const cropped=document.createElement('canvas');cropped.width=Math.max(1,Math.round(cropW));cropped.height=Math.max(1,Math.round(cropH));
+ // La escala física del estampado debe reflejar cuánto ocupa el arte dentro del lienzo original.
+ // El recorte conserva la proporción del lienzo; este factor evita que un diseño pequeño
+ // se convierta en un estampado de tamaño completo al proyectarlo sobre el modelo 3D.
+ cropped.printScale=Math.min(1,cropW/canvas.width);
  const c=cropped.getContext('2d');
  items.forEach(o=>{
   c.save();c.translate(o.x-minX,o.y-minY);c.scale(o.scale||1,o.scale||1);
