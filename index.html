@@ -143,8 +143,8 @@ canvas.onpointerdown=e=>{
   const handleIndex=handles.findIndex(([hx,hy])=>Math.abs(x-hx)<=28&&Math.abs(y-hy)<=28);
   if(handleIndex!==-1){
    selected=i;
-   const opposite=handles[3-handleIndex];
-   drag={mode:'resize',anchorX:opposite[0],anchorY:opposite[1],start:Math.max(1,Math.hypot(x-opposite[0],y-opposite[1])),scale:items[i].scale||1};
+   const opposite=handles[3-handleIndex],corner=handles[handleIndex];
+   drag={mode:'resize',anchorX:opposite[0],anchorY:opposite[1],cornerX:corner[0],cornerY:corner[1],start:Math.max(1,Math.hypot(corner[0]-opposite[0],corner[1]-opposite[1])),scale:items[i].scale||1};
    break;
   }
   if(x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h){selected=i;drag={mode:'move',x,y,ox:items[i].x,oy:items[i].y};break}
@@ -156,9 +156,11 @@ canvas.onpointermove=e=>{
  const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*canvas.width/r.width,y=(e.clientY-r.top)*canvas.height/r.height,o=items[selected];
  if(drag.mode==='resize'){
   const next=Math.max(1,Math.hypot(x-drag.anchorX,y-drag.anchorY));
-  o.scale=Math.max(.08,Math.min(4,drag.scale*next/drag.start));
-  o.x=drag.anchorX+(x-drag.anchorX)/2;
-  o.y=drag.anchorY+(y-drag.anchorY)/2;
+  const ratio=next/drag.start;
+  o.scale=Math.max(.08,Math.min(4,drag.scale*ratio));
+  const appliedRatio=o.scale/drag.scale;
+  o.x=drag.anchorX+(drag.cornerX-drag.anchorX)*appliedRatio/2;
+  o.y=drag.anchorY+(drag.cornerY-drag.anchorY)*appliedRatio/2;
   document.getElementById('scale').value=o.scale;
   document.getElementById('scaleValue').textContent=Math.round(o.scale*100)+'%';
   document.getElementById('canvasScale').value=o.scale;
