@@ -49,3 +49,28 @@ test('transparent print artwork excludes the artboard background and preserves c
   expect(result.alphaAtCorner).toBe(0);
   expect(Math.abs(result.ratio - result.expected)).toBeLessThan(0.01);
 });
+
+test('3D viewer and its controls remain present and visible at desktop, tablet and mobile widths', async ({ page }) => {
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
+
+  for (const width of [1440, 900, 600]) {
+    await page.setViewportSize({ width, height: 900 });
+    const panel = page.locator('aside.right');
+    const viewer = page.locator('#threePreview');
+    await expect(panel).toBeVisible();
+    await expect(viewer).toBeVisible();
+    await expect(page.locator('#modelFile')).toBeAttached();
+    await expect(page.locator('#updatePrintBtn')).toBeVisible();
+    await expect(page.locator('#clearPrintsBtn')).toBeVisible();
+    await expect(page.locator('#reset3d')).toBeVisible();
+    await expect(page.locator('#materialSelect')).toBeVisible();
+    await expect(page.locator('#garmentColor')).toBeVisible();
+    await expect(page.locator('#printSize')).toBeVisible();
+    const dimensions = await viewer.boundingBox();
+    expect(dimensions.width).toBeGreaterThan(150);
+    expect(dimensions.height).toBeGreaterThan(200);
+  }
+  expect(pageErrors).toEqual([]);
+});
