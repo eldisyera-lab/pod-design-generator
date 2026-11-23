@@ -55,7 +55,7 @@ test('3D viewer and its controls remain present and visible at desktop, tablet a
   page.on('pageerror', error => pageErrors.push(error.message));
   await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
 
-  for (const width of [1440, 900, 600]) {
+  for (const width of [1440, 1001, 900, 821, 820, 600]) {
     await page.setViewportSize({ width, height: 900 });
     const panel = page.locator('aside.right');
     const viewer = page.locator('#threePreview');
@@ -71,6 +71,9 @@ test('3D viewer and its controls remain present and visible at desktop, tablet a
     const dimensions = await viewer.boundingBox();
     expect(dimensions.width).toBeGreaterThan(150);
     expect(dimensions.height).toBeGreaterThan(200);
+    const workspace = await page.locator('main.workspace').boundingBox();
+    if (width > 820) expect(dimensions.x).toBeGreaterThan(workspace.x + workspace.width - 1);
+    else expect(dimensions.y).toBeGreaterThan(workspace.y + workspace.height - 1);
   }
   expect(pageErrors).toEqual([]);
 });
