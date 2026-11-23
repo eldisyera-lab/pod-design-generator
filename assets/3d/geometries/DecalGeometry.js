@@ -1,6 +1,7 @@
 import {
 	BufferGeometry,
 	Float32BufferAttribute,
+	Matrix3,
 	Matrix4,
 	Vector3
 } from '../../vendor/three.module.min.js';
@@ -39,6 +40,7 @@ class DecalGeometry extends BufferGeometry {
 		// this matrix represents the transformation of the decal projector
 
 		const projectorMatrix = new Matrix4();
+		const normalMatrix = new Matrix3().getNormalMatrix( mesh.matrixWorld );
 		projectorMatrix.makeRotationFromEuler( orientation );
 		projectorMatrix.setPosition( position );
 
@@ -146,7 +148,7 @@ class DecalGeometry extends BufferGeometry {
 			vertex.applyMatrix4( mesh.matrixWorld );
 			vertex.applyMatrix4( projectorMatrixInverse );
 
-			normal.transformDirection( mesh.matrixWorld );
+			normal.applyMatrix3( normalMatrix ).normalize();
 
 			decalVertices.push( new DecalVertex( vertex.clone(), normal.clone() ) );
 
