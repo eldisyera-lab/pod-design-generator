@@ -1,21 +1,22 @@
 # PrintStudio — POD Design Lab
 
-Primera versión del estudio visual de diseño para impresión bajo demanda.
+## Inicio recomendado en Windows
+1. Descomprime el ZIP completo en una carpeta nueva.
+2. Necesitas Python 3 instalado.
+3. Haz doble clic en **Iniciar PrintStudio.bat**.
+4. Se abrirá Chrome o tu navegador predeterminado en la dirección local que indique la ventana negra.
+5. Mantén abierta esa ventana mientras trabajas. Para cerrar el servidor, pulsa Ctrl+C y luego cierra la ventana.
 
-## Cómo usar
-1. Abre `index.html` con Chrome, Edge o Firefox.
-2. Añade textos, formas e imágenes y arrástralos sobre el lienzo.
-3. Elige un formato de producto y exporta un PNG.
+**Importante:** no abras `index.html` con doble clic. El visor 3D usa módulos JavaScript y necesita servirse desde un servidor local.
+
+El lanzador busca automáticamente un puerto libre entre 8765 y 8795. Si una instancia antigua sigue ocupando 8765, selecciona otro puerto y muestra la carpeta exacta que está sirviendo. Así se evita que el navegador abra accidentalmente una copia antigua de PrintStudio.
 
 ## Características
 - Aplicación local, sin cuentas, backend, APIs ni suscripciones.
 - Editor visual con texto, formas e imágenes.
 - Movimiento por arrastre, colores, tipografías, escala y capas.
 - Fondo transparente opcional.
-- Exportación PNG en tamaños de trabajo iniciales.
-- Guardado local del proyecto en el navegador.
+- Exportación PNG y guardado local del proyecto.
+- Visor 3D basado en Three.js; carga modelos GLB locales.
 
-## Importante
-Las dimensiones son plantillas genéricas iniciales, no perfiles certificados de proveedores. Antes de imprimir o vender, comprueba las medidas, sangrados, zonas seguras y perfiles de color exigidos por cada proveedor POD. En próximas versiones ampliaremos la edición y la gestión de recursos.
-
-La aplicación se ejecuta localmente en el navegador. No envía los diseños a un servidor ni requiere servicios de pago. Usa únicamente imágenes y fuentes con licencias adecuadas para uso comercial.
+Las dimensiones son plantillas genéricas iniciales, no perfiles certificados de proveedores. Antes de imprimir o vender, comprueba medidas, sangrados, zonas seguras y perfiles de color exigidos por cada proveedor POD.
