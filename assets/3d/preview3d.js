@@ -69,7 +69,7 @@ function place(x,y){
  if(!h.object.geometry.attributes.normal)h.object.geometry.computeVertexNormals();
  const n=h.face.normal.clone().transformDirection(h.object.matrixWorld).normalize();
  const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),n);
- const e=new THREE.Euler().setFromQuaternion(q),v=Number(sizeInput.value||.7),artwork=printArtwork();
+ const e=new THREE.Euler().setFromQuaternion(q),baseSize=Number(sizeInput.value||.7),artwork=printArtwork(),v=baseSize*(Number(artwork.printScale)||1);
  try{
   const g=new DecalGeometry(h.object,h.point.clone().addScaledVector(n,.002),e,new THREE.Vector3(v,v*(artwork.height/artwork.width),Math.max(.04,v*.3)));
   if(!g.attributes.position||g.attributes.position.count===0){g.dispose();say("No se pudo proyectar en esa zona. Prueba una superficie más plana.");return}
