@@ -72,7 +72,20 @@ function wrapTextOn(c,text,x,y,maxWidth,lineHeight){const words=(text||'').split
 window.createPrintTextureCanvas=createPrintTextureCanvas;
 
 function wrapText(text,x,y,maxWidth,lineHeight){const words=(text||'').split(/\s+/),lines=[];let line='';for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);const start=y-(lines.length-1)*lineHeight/2;lines.forEach((l,i)=>ctx.fillText(l,x,start+i*lineHeight))}
-function bounds(o){const w=o.type==='text'?Math.min(780,Math.max(120,(o.text||'').length*o.size*.55)):o.type==='image'?o.w:o.size;const h=o.type==='text'?o.size*2.2:o.type==='image'?o.h:o.size;return{x:o.x-w*(o.scale||1)/2,y:o.y-h*(o.scale||1)/2,w:w*(o.scale||1),h:h*(o.scale||1)}}
+function bounds(o){
+ let w,h;
+ if(o.type==='text'){
+  ctx.save();ctx.font=(o.bold?'bold ':'')+o.size+'px "'+o.font+'"';
+  const words=(o.text||'').split(/\\s+/),lines=[];let line='';
+  for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>760&&line){lines.push(line);line=word}else line=test}
+  if(line)lines.push(line);
+  w=Math.min(804,Math.max(120,...lines.map(v=>ctx.measureText(v).width+24)));
+  h=Math.max(o.size*1.18,lines.length*o.size*1.18)+18;
+  ctx.restore();
+ }else{w=o.type==='image'?o.w:o.size;h=o.type==='image'?o.h:o.size}
+ const scale=o.scale||1;
+ return{x:o.x-w*scale/2,y:o.y-h*scale/2,w:w*scale,h:h*scale};
+}
 function add(o){items.push(o);selected=items.length-1;sync();render()}
 function sync(){const o=items[selected];document.getElementById('selectionLabel').textContent=o?'Elemento '+(selected+1)+' de '+items.length:'Ningún elemento seleccionado';document.getElementById('selectionTools').hidden=!o;document.getElementById('canvasScale').value=o?.scale||1;document.getElementById('canvasScaleValue').textContent=Math.round((o?.scale||1)*100)+'%';document.getElementById('textValue').value=o?.type==='text'?o.text:'';document.getElementById('font').value=o?.font||'Arial';document.getElementById('fontSize').value=o?.size||90;document.getElementById('color').value=o?.color||'#172033';document.getElementById('scale').value=o?.scale||1;document.getElementById('scaleValue').textContent=Math.round((o?.scale||1)*100)+'%';document.getElementById('boldBtn').style.background=o?.bold?'#4b5680':''}
 document.getElementById('addText').onclick=()=>add({type:'text',text:'Tu diseño aquí',x:canvas.width/2,y:canvas.height/2,size:90,font:'Arial',color:'#172033',bold:true,scale:1});
