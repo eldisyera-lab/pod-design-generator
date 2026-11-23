@@ -76,7 +76,7 @@ function bounds(o){
  let w,h;
  if(o.type==='text'){
   ctx.save();ctx.font=(o.bold?'bold ':'')+o.size+'px "'+o.font+'"';
-  const words=(o.text||'').split(/\\s+/),lines=[];let line='';
+  const words=(o.text||'').split(/\s+/),lines=[];let line='';
   for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>760&&line){lines.push(line);line=word}else line=test}
   if(line)lines.push(line);
   w=Math.min(804,Math.max(120,...lines.map(v=>ctx.measureText(v).width+24)));
