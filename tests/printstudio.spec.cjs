@@ -25,6 +25,22 @@ test('transparent print artwork excludes the artboard background and preserves c
   expect(Math.abs(result.ratio - result.expected)).toBeLessThan(0.01);
 });
 
+
+test('3D print size follows the artwork scale on the 2D canvas', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
+  const result = await page.evaluate(() => {
+    document.getElementById('addShape').click();
+    const large = window.createPrintTextureCanvas().printScale;
+    document.getElementById('canvasScale').value = '0.5';
+    document.getElementById('canvasScale').dispatchEvent(new Event('input', { bubbles: true }));
+    const small = window.createPrintTextureCanvas().printScale;
+    return { large, small };
+  });
+  expect(result.large).toBeGreaterThan(0);
+  expect(result.small).toBeLessThan(result.large);
+  expect(result.small / result.large).toBeCloseTo(0.5, 1);
+});
+
 test('3D viewer module actually initializes a WebGL canvas and reports ready', async ({ page }) => {
   const pageErrors = [];
   const consoleErrors = [];
