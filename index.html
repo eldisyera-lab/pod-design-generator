@@ -93,11 +93,10 @@ function updateProduct(){
  document.getElementById('dimensions').textContent=w+' × '+h+' px · 300 DPI';
  if(newH!==oldH){
   const factor=newH/oldH;
-  items.forEach(o=>{
-   o.y*=factor;
-   if(o.type==='text'||o.type==='shape')o.size*=factor;
-   if(o.type==='image'){o.w*=factor;o.h*=factor}
-  });
+  const oldCenter=oldH/2,newCenter=newH/2;
+  // Mantener el tamaño físico del diseño respecto al ancho constante del lienzo.
+  // Solo se transforma la posición vertical para conservar su ubicación relativa.
+  items.forEach(o=>{o.y=newCenter+(o.y-oldCenter)*factor});
   canvas.height=newH;
   document.querySelector('.artboard').style.aspectRatio=w+'/'+h;
  }
