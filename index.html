@@ -50,22 +50,25 @@ function render(){ctx.clearRect(0,0,canvas.width,canvas.height);if(!transparent)
 // El visor 3D se gestiona en su módulo independiente.
 
 function createPrintTextureCanvas(){
- const out=document.createElement('canvas');out.width=canvas.width;out.height=canvas.height;
- const c=out.getContext('2d');
+ if(!items.length){const empty=document.createElement('canvas');empty.width=empty.height=1;return empty}
+ let minX=canvas.width,minY=canvas.height,maxX=0,maxY=0,hasVisible=false;
  items.forEach(o=>{
-  c.save();c.translate(o.x,o.y);c.scale(o.scale||1,o.scale||1);
+  const b=bounds(o),left=Math.max(0,b.x),top=Math.max(0,b.y),right=Math.min(canvas.width,b.x+b.w),bottom=Math.min(canvas.height,b.y+b.h);
+  if(right>left&&bottom>top){hasVisible=true;minX=Math.min(minX,left);minY=Math.min(minY,top);maxX=Math.max(maxX,right);maxY=Math.max(maxY,bottom)}
+ });
+ if(!hasVisible){const empty=document.createElement('canvas');empty.width=empty.height=1;return empty}
+ const pad=Math.max(8,Math.round(Math.max(maxX-minX,maxY-minY)*.035));
+ minX=Math.max(0,Math.floor(minX-pad));minY=Math.max(0,Math.floor(minY-pad));
+ maxX=Math.min(canvas.width,Math.ceil(maxX+pad));maxY=Math.min(canvas.height,Math.ceil(maxY+pad));
+ const cropped=document.createElement('canvas');cropped.width=Math.max(1,maxX-minX);cropped.height=Math.max(1,maxY-minY);
+ const c=cropped.getContext('2d');
+ items.forEach(o=>{
+  c.save();c.translate(o.x-minX,o.y-minY);c.scale(o.scale||1,o.scale||1);
   if(o.type==='text'){c.font=(o.bold?'bold ':'')+o.size+'px "'+o.font+'"';c.textAlign='center';c.textBaseline='middle';c.fillStyle=o.color;wrapTextOn(c,o.text,0,0,760,o.size*1.18)}
   else if(o.type==='shape'){c.fillStyle=o.color;if(o.shape==='circle'){c.beginPath();c.arc(0,0,o.size/2,0,Math.PI*2);c.fill()}else c.fillRect(-o.size/2,-o.size/2,o.size,o.size)}
   else if(o.type==='image'&&o.img)c.drawImage(o.img,-o.w/2,-o.h/2,o.w,o.h);
   c.restore();
  });
- const data=c.getImageData(0,0,out.width,out.height).data;let minX=out.width,minY=out.height,maxX=-1,maxY=-1;
- for(let y=0;y<out.height;y++)for(let x=0;x<out.width;x++){if(data[(y*out.width+x)*4+3]>0){if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y}}
- if(maxX<minX)return out;
- const pad=Math.max(8,Math.round(Math.max(maxX-minX+1,maxY-minY+1)*.035));
- minX=Math.max(0,minX-pad);minY=Math.max(0,minY-pad);maxX=Math.min(out.width-1,maxX+pad);maxY=Math.min(out.height-1,maxY+pad);
- const cropped=document.createElement('canvas');cropped.width=maxX-minX+1;cropped.height=maxY-minY+1;
- cropped.getContext('2d').drawImage(out,minX,minY,cropped.width,cropped.height,0,0,cropped.width,cropped.height);
  return cropped;
 }
 function wrapTextOn(c,text,x,y,maxWidth,lineHeight){const words=(text||'').split(/\s+/),lines=[];let line='';for(const word of words){const test=line?line+' '+word:word;if(c.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);const start=y-(lines.length-1)*lineHeight/2;lines.forEach((l,i)=>c.fillText(l,x,start+i*lineHeight))}
