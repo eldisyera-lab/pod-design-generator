@@ -55,7 +55,29 @@ function populateMaterials(){materials=[];materialSelect.innerHTML='<option valu
 function recolor(hex){if(!root)return;let c=new THREE.Color(hex),idx=Number(materialSelect.value),targets=idx<0?materials:[materials[idx]].filter(Boolean);targets.forEach(m=>{if(m.color)m.color.copy(c);m.needsUpdate=true})}
 function printArtwork(){return typeof window.createPrintTextureCanvas==="function"?window.createPrintTextureCanvas():canvas}
 function tex(){let artwork=printArtwork(),t=new THREE.CanvasTexture(artwork);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();t.needsUpdate=true;return t}
-function place(x,y){if(!root)return;let r=renderer.domElement.getBoundingClientRect();pointer.set((x-r.left)/r.width*2-1,-((y-r.top)/r.height*2-1));ray.setFromCamera(pointer,camera);let hits=ray.intersectObjects(meshes,false);if(!hits.length){say("Haz clic sobre la superficie del producto.");return}let h=hits[0],n=h.face.normal.clone().transformDirection(h.object.matrixWorld),q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),n),e=new THREE.Euler().setFromQuaternion(q),v=Number(sizeInput.value||.7),artwork=printArtwork(),g=new DecalGeometry(h.object,h.point.clone().addScaledVector(n,.002),e,new THREE.Vector3(v,v*(artwork.height/artwork.width),Math.max(.04,v*.3))),m=new THREE.MeshBasicMaterial({map:tex(),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,side:THREE.DoubleSide}),d=new THREE.Mesh(g,m);scene.add(d);decals.push(d);say("Estampado colocado con el arte transparente, sin el fondo del lienzo.")}
+function place(x,y){
+ if(!root)return;
+ root.updateMatrixWorld(true);
+ const r=renderer.domElement.getBoundingClientRect();
+ if(!r.width||!r.height)return;
+ pointer.set((x-r.left)/r.width*2-1,-((y-r.top)/r.height*2-1));
+ ray.setFromCamera(pointer,camera);
+ const hits=ray.intersectObjects(meshes,false);
+ if(!hits.length){say("Haz clic sobre la superficie del producto.");return}
+ const h=hits[0];
+ if(!h.face){say("No se pudo determinar la superficie. Prueba otra zona del modelo.");return}
+ if(!h.object.geometry.attributes.normal)h.object.geometry.computeVertexNormals();
+ const n=h.face.normal.clone().transformDirection(h.object.matrixWorld).normalize();
+ const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),n);
+ const e=new THREE.Euler().setFromQuaternion(q),v=Number(sizeInput.value||.7),artwork=printArtwork();
+ try{
+  const g=new DecalGeometry(h.object,h.point.clone().addScaledVector(n,.002),e,new THREE.Vector3(v,v*(artwork.height/artwork.width),Math.max(.04,v*.3)));
+  if(!g.attributes.position||g.attributes.position.count===0){g.dispose();say("No se pudo proyectar en esa zona. Prueba una superficie más plana.");return}
+  const m=new THREE.MeshBasicMaterial({map:tex(),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,side:THREE.DoubleSide});
+  const d=new THREE.Mesh(g,m);scene.add(d);decals.push(d);
+  say("Estampado colocado con el arte transparente, sin el fondo del lienzo.");
+ }catch(err){console.error(err);say("No se pudo proyectar en esa superficie. Prueba otra zona del modelo.")}
+}
 function update(){if(!decals.length){say("Primero carga un GLB y haz clic en la superficie para colocar el estampado.");return}const oldTextures=new Set();const t=tex();decals.forEach(d=>{if(d.material.map)oldTextures.add(d.material.map);d.material.map=t;d.material.needsUpdate=true});oldTextures.forEach(old=>{if(old!==t)old.dispose()});say("Estampado actualizado con el diseño transparente, sin fondo ni controles de selección.")}
 fileInput.addEventListener("change",e=>{let f=e.target.files[0];if(!f)return;if(!f.name.toLowerCase().endsWith(".glb")){say("Selecciona un archivo .GLB con texturas integradas.");return}say("Cargando modelo…");let rd=new FileReader();rd.onload=()=>new GLTFLoader().parse(rd.result,"",g=>{clear();root=g.scene;scene.add(root);root.traverse(o=>{if(o.isMesh)meshes.push(o)});populateMaterials();fit();recolor(colorInput.value);say("Modelo cargado: "+f.name+". Arrastra para girar y haz clic en la superficie para estampar.")},err=>{console.error(err);say("No se pudo leer el GLB o sus texturas.")});rd.readAsArrayBuffer(f)});
 colorInput.addEventListener("input",e=>recolor(e.target.value));materialSelect.addEventListener("change",()=>recolor(colorInput.value));document.getElementById("updatePrintBtn").addEventListener("click",update);
