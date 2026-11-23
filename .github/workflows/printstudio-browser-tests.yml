@@ -1,0 +1,49 @@
+name: PrintStudio browser regression tests
+
+on:
+  push:
+    branches:
+      - studio-profesional-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install --save-dev @playwright/test
+          npx playwright install --with-deps chromium
+      - name: Start local web server
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/printstudio-server.log 2>&1 &
+          echo $! > /tmp/printstudio-server.pid
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/ > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/printstudio-server.log
+          exit 1
+      - name: Run browser regression tests
+        run: npx playwright test tests/printstudio.spec.cjs --reporter=line
+      - name: Package tested branch
+        if: success()
+        run: |
+          git archive --format=zip --output=PrintStudio-studio-profesional-v1-tested.zip HEAD
+      - name: Upload tested ZIP
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PrintStudio-studio-profesional-v1-tested
+          path: PrintStudio-studio-profesional-v1-tested.zip
+          if-no-files-found: error
