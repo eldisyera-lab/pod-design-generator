@@ -60,7 +60,16 @@ function createPrintTextureCanvas(){
  const pad=Math.max(8,Math.round(Math.max(maxX-minX,maxY-minY)*.035));
  minX=Math.max(0,Math.floor(minX-pad));minY=Math.max(0,Math.floor(minY-pad));
  maxX=Math.min(canvas.width,Math.ceil(maxX+pad));maxY=Math.min(canvas.height,Math.ceil(maxY+pad));
- const cropped=document.createElement('canvas');cropped.width=Math.max(1,maxX-minX);cropped.height=Math.max(1,maxY-minY);
+ // Mantener siempre la proporción del lienzo: el decal existente conserva su geometría al actualizar el arte.
+ const aspect=canvas.width/canvas.height;
+ let cropW=maxX-minX,cropH=maxY-minY,cx=(minX+maxX)/2,cy=(minY+maxY)/2;
+ if(cropW/cropH<aspect)cropW=Math.min(canvas.width,cropH*aspect);
+ else cropH=Math.min(canvas.height,cropW/aspect);
+ cropW=Math.min(canvas.width,cropW);cropH=Math.min(canvas.height,cropH);
+ minX=Math.max(0,Math.min(canvas.width-cropW,cx-cropW/2));
+ minY=Math.max(0,Math.min(canvas.height-cropH,cy-cropH/2));
+ maxX=minX+cropW;maxY=minY+cropH;
+ const cropped=document.createElement('canvas');cropped.width=Math.max(1,Math.round(cropW));cropped.height=Math.max(1,Math.round(cropH));
  const c=cropped.getContext('2d');
  items.forEach(o=>{
   c.save();c.translate(o.x-minX,o.y-minY);c.scale(o.scale||1,o.scale||1);
