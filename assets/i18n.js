@@ -143,8 +143,8 @@
     const raw=String(value||"Malla"),dict=language==="en"?materialEsToEn:materialEnToEs;
     const lookup=new Map(Object.entries(dict).map(([key,val])=>[key.toLowerCase(),val]));
     const tokenAliases=language==="en"
-      ? {briefs:"Ropa interior",underwear:"Ropa interior",hair:"Pelo",short:"Corto"}
-      : {briefs:"Briefs",underwear:"Underwear",hair:"Hair",pelo:"Hair",cabello:"Hair",corto:"Short",corta:"Short"};
+      ? {briefs:"Briefs",underwear:"Underwear",hair:"Hair",pelo:"Hair",cabello:"Hair",corto:"Short",corta:"Short",tejido:"Cloth"}
+      : {briefs:"Ropa interior",underwear:"Ropa interior",hair:"Pelo",short:"Corto",cloth:"Tejido"};
     if(lookup.has(raw.toLowerCase()))return lookup.get(raw.toLowerCase());
     // Keep GLB separators and numeric suffixes; use context-safe aliases for common
     // character tokens so Hair_short02 and Cloth_briefs are not mistranslated.
