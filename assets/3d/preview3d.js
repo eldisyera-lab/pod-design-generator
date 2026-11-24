@@ -53,10 +53,32 @@ function fit(){
   camera.near=Math.max(max/1000,.001);camera.far=Math.max(max*100,10);camera.updateProjectionMatrix();
 }
 function materialLabel(value){const raw=String(value||"Malla");return window.printStudioTranslateMaterial?window.printStudioTranslateMaterial(raw):raw;}
- function populateMaterials(){materials=[];materialSelect.innerHTML="";let all=document.createElement("option");all.value="-1";all.textContent=materialLabel("Todos los materiales");materialSelect.appendChild(all);let seen=new Set();meshes.forEach(mesh=>(Array.isArray(mesh.material)?mesh.material:[mesh.material]).forEach((mat,i)=>{if(!mat||seen.has(mat))return;seen.add(mat);materials.push(mat);let op=document.createElement("option");op.value=String(materials.length-1);const meshName=mesh.name||"Malla",matName=mat.name||("material "+(i+1));op.textContent=materialLabel(meshName)+(matName?" · "+materialLabel(matName):"");op.title="Nombre GLB: "+meshName+" · "+matName;materialSelect.appendChild(op)}));if(materials.length)materialSelect.value="0";}
+ function populateMaterials(){
+ materials=[];materialSelect.innerHTML="";
+ const all=document.createElement("option");all.value="-1";all.textContent=materialLabel("Todos los materiales");materialSelect.appendChild(all);
+ meshes.forEach(mesh=>{
+  const original=Array.isArray(mesh.material)?mesh.material:[mesh.material];
+  const isolated=original.map((source,slot)=>{
+   if(!source)return source;
+   // Cada malla recibe su propia instancia de material: cambiar una prenda no altera
+   // otra malla que compartía el mismo material en el GLB original. Las texturas se conservan.
+   const instance=source.clone();
+   const entry={material:instance,meshName:mesh.name||"Malla",materialName:source.name||("Material "+(slot+1)),mesh,slot};
+   materials.push(entry);
+   const op=document.createElement("option");op.value=String(materials.length-1);
+   op.textContent=materialLabel(entry.meshName)+" · "+materialLabel(entry.materialName);
+   op.title="GLB: "+entry.meshName+" · "+entry.materialName;
+   materialSelect.appendChild(op);
+   return instance;
+  });
+  mesh.material=Array.isArray(mesh.material)?isolated:isolated[0];
+ });
+ if(materials.length)materialSelect.value="0";
+}
 window.addEventListener("printstudio:languagechange",()=>{if(root)populateMaterials()});
-function syncMaterialColor(){const idx=Number(materialSelect.value),targets=idx<0?materials:[materials[idx]].filter(Boolean),m=targets.find(x=>x?.color);if(m)colorInput.value="#"+m.color.getHexString()}
-function recolor(hex){if(!root)return;let c=new THREE.Color(hex),idx=Number(materialSelect.value),targets=idx<0?materials:[materials[idx]].filter(Boolean);targets.forEach(m=>{if(m.color)m.color.copy(c);m.needsUpdate=true})}
+function selectedMaterialEntries(){const idx=Number(materialSelect.value);return idx<0?materials:materials[idx]?[materials[idx]]:[]}
+function syncMaterialColor(){const entry=selectedMaterialEntries().find(x=>x.material?.color);if(entry)colorInput.value="#"+entry.material.color.getHexString()}
+function recolor(hex){if(!root)return;const c=new THREE.Color(hex);selectedMaterialEntries().forEach(entry=>{const m=entry.material;if(m.color){m.color.copy(c);m.needsUpdate=true}})}
 function printArtwork(){return typeof window.createPrintTextureCanvas==="function"?window.createPrintTextureCanvas():canvas}
 function tex(){let artwork=printArtwork(),t=new THREE.CanvasTexture(artwork);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();t.needsUpdate=true;return t}
 function place(x,y){
