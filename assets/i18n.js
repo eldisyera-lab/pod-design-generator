@@ -78,7 +78,7 @@
       if (m) return "PNG exported: " + m[1];
     } else {
       let m = value.match(/^Format updated: (.*)\. Your design has been preserved\.$/);
-      if (m) return "Formato actualizado: " + m[1] + ". El diseño se ha conservado.";
+      if (m) return "Formato actualizado: " + translate(m[1]) + ". El diseño se ha conservado.";
       m = value.match(/^Background removed from (.*) pixels\.$/);
       if (m) return "Fondo eliminado en " + m[1] + " píxeles.";
       m = value.match(/^Model loaded: (.*)\. Drag to rotate and click the surface to apply the print\.$/);
