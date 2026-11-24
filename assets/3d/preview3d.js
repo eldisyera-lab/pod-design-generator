@@ -52,8 +52,20 @@ function fit(){
   yaw=-.25;pitch=.08;target.copy(c);distance=max*2.7;
   camera.near=Math.max(max/1000,.001);camera.far=Math.max(max*100,10);camera.updateProjectionMatrix();
 }
-function materialLabel(value){if(window.printStudioTranslate)return window.printStudioTranslate(value);return value}
-function populateMaterials(){materials=[];materialSelect.innerHTML="";let all=document.createElement("option");all.value="-1";all.textContent=materialLabel("Todos los materiales");materialSelect.appendChild(all);let seen=new Set();meshes.forEach(mesh=>(Array.isArray(mesh.material)?mesh.material:[mesh.material]).forEach((mat,i)=>{if(!mat||seen.has(mat))return;seen.add(mat);materials.push(mat);let op=document.createElement("option");op.value=String(materials.length-1);const meshName=mesh.name||"Malla",matName=mat.name||("material "+(i+1));op.textContent=materialLabel(meshName)+(matName?" · "+materialLabel(matName):"");materialSelect.appendChild(op)}));if(materials.length)materialSelect.value="0";}
+function materialLabel(value){
+  const raw=String(value||"Malla");
+  if(window.printStudioTranslate){
+    const direct=window.printStudioTranslate(raw);
+    if(direct!==raw)return direct;
+    return raw.split(/([\s_.:/\\-]+)/).map(part=>{
+      if(!part||/^[\s_.:/\\-]+$/.test(part)||/^\d+$/.test(part))return part;
+      const translated=window.printStudioTranslate(part);
+      return translated!==part?translated:part;
+    }).join("");
+  }
+  return raw;
+}
+function populateMaterials(){materials=[];materialSelect.innerHTML="";let all=document.createElement("option");all.value="-1";all.textContent=materialLabel("Todos los materiales");materialSelect.appendChild(all);let seen=new Set();meshes.forEach(mesh=>(Array.isArray(mesh.material)?mesh.material:[mesh.material]).forEach((mat,i)=>{if(!mat||seen.has(mat))return;seen.add(mat);materials.push(mat);let op=document.createElement("option");op.value=String(materials.length-1);const meshName=mesh.name||"Malla",matName=mat.name||("material "+(i+1));op.textContent=materialLabel(meshName)+(matName?" · "+materialLabel(matName):"");op.title="Nombre GLB: "+meshName+" · "+matName;materialSelect.appendChild(op)}));if(materials.length)materialSelect.value="0";}
 window.addEventListener("printstudio:languagechange",()=>{if(root)populateMaterials()});
 function syncMaterialColor(){const idx=Number(materialSelect.value),targets=idx<0?materials:[materials[idx]].filter(Boolean),m=targets.find(x=>x?.color);if(m)colorInput.value="#"+m.color.getHexString()}
 function recolor(hex){if(!root)return;let c=new THREE.Color(hex),idx=Number(materialSelect.value),targets=idx<0?materials:[materials[idx]].filter(Boolean);targets.forEach(m=>{if(m.color)m.color.copy(c);m.needsUpdate=true})}

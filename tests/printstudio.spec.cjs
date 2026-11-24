@@ -255,3 +255,13 @@ test('3D model library stores GLB files persistently and reloads them', async ({
   await page.locator('#modelLibraryList').getByRole('button', { name: 'Cargar' }).click();
   await expect(page.locator('#threeStatus')).toContainText('Modelo cargado', { timeout: 10000 });
 });
+
+test('project save explains the native editable format and open workflow', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#saveBtn').click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe('printstudio-proyecto.printstudio');
+  await expect(page.locator('#status')).toContainText('archivo editable .printstudio');
+  await expect(page.locator('#saveBtn')).toHaveAttribute('title', /Abrir proyecto/);
+});
