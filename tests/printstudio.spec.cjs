@@ -299,7 +299,7 @@ test('GLB material localization handles the real character and garment naming pa
     Cuerpo: 'Body',
     Piel: 'Skin',
     'Sudadera con capucha': 'Hoodie',
-    'Ropa interior': 'Briefs'
+    'Ropa interior': 'Underwear'
   });
 });
 
