@@ -53,28 +53,30 @@ function fit(){
   camera.near=Math.max(max/1000,.001);camera.far=Math.max(max*100,10);camera.updateProjectionMatrix();
 }
 function materialLabel(value){const raw=String(value||"Malla");return window.printStudioTranslateMaterial?window.printStudioTranslateMaterial(raw):raw;}
- function populateMaterials(){
- materials=[];materialSelect.innerHTML="";
- const all=document.createElement("option");all.value="-1";all.textContent=materialLabel("Todos los materiales");materialSelect.appendChild(all);
- meshes.forEach(mesh=>{
-  const original=Array.isArray(mesh.material)?mesh.material:[mesh.material];
-  const isolated=original.map((source,slot)=>{
-   if(!source)return source;
-   // Cada malla recibe su propia instancia de material: cambiar una prenda no altera
-   // otra malla que compartía el mismo material en el GLB original. Las texturas se conservan.
-   const instance=source.clone();
-   const entry={material:instance,meshName:mesh.name||"Malla",materialName:source.name||("Material "+(slot+1)),mesh,slot};
-   materials.push(entry);
-   const op=document.createElement("option");op.value=String(materials.length-1);
-   op.textContent=materialLabel(entry.meshName)+" · "+materialLabel(entry.materialName);
-   op.title="GLB: "+entry.meshName+" · "+entry.materialName;
-   materialSelect.appendChild(op);
-   return instance;
+ function isolateMeshMaterials(){
+  meshes.forEach(mesh=>{
+   const source=Array.isArray(mesh.material)?mesh.material:[mesh.material];
+   const isolated=source.map(mat=>mat?mat.clone():mat);
+   mesh.material=Array.isArray(mesh.material)?isolated:isolated[0];
   });
-  mesh.material=Array.isArray(mesh.material)?isolated:isolated[0];
- });
- if(materials.length)materialSelect.value="0";
-}
+ }
+ function populateMaterials(){
+  materials=[];materialSelect.innerHTML="";
+  const all=document.createElement("option");all.value="-1";all.textContent=materialLabel("Todos los materiales");materialSelect.appendChild(all);
+  meshes.forEach(mesh=>{
+   const list=Array.isArray(mesh.material)?mesh.material:[mesh.material];
+   list.forEach((mat,slot)=>{
+    if(!mat)return;
+    const entry={material:mat,meshName:mesh.name||"Malla",materialName:mat.name||("Material "+(slot+1)),mesh,slot};
+    materials.push(entry);
+    const op=document.createElement("option");op.value=String(materials.length-1);
+    op.textContent=materialLabel(entry.meshName)+" · "+materialLabel(entry.materialName);
+    op.title="GLB: "+entry.meshName+" · "+entry.materialName;
+    materialSelect.appendChild(op);
+   });
+  });
+  if(materials.length)materialSelect.value="0";
+ }
 window.addEventListener("printstudio:languagechange",()=>{if(root)populateMaterials()});
 function selectedMaterialEntries(){const idx=Number(materialSelect.value);return idx<0?materials:materials[idx]?[materials[idx]]:[]}
 function syncMaterialColor(){const entry=selectedMaterialEntries().find(x=>x.material?.color);if(entry)colorInput.value="#"+entry.material.color.getHexString()}
@@ -114,7 +116,7 @@ async function libraryRequest(mode,action,value){const db=await openLibraryDB();
 function bytesToBase64(buffer){let binary="",bytes=new Uint8Array(buffer),chunk=0x8000;for(let i=0;i<bytes.length;i+=chunk)binary+=String.fromCharCode(...bytes.subarray(i,i+chunk));return btoa(binary)}
 function base64ToBytes(value){const binary=atob(value),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return bytes.buffer}
 async function refreshLibrary(){const host=document.getElementById("modelLibraryList");try{const models=await libraryRequest("readonly","all");host.replaceChildren();if(!models.length){host.textContent="Aún no hay modelos guardados.";return}models.sort((a,b)=>a.name.localeCompare(b.name)).forEach(model=>{const row=document.createElement("div");row.style.cssText="display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid #29364d";const title=document.createElement("span");title.style.flex="1";title.textContent=model.name+" · "+model.category;const load=document.createElement("button");load.className="btn";load.textContent="Cargar";load.dataset.load=model.id;const del=document.createElement("button");del.className="btn";del.textContent="Eliminar";del.dataset.delete=model.id;row.append(title,load,del);host.append(row)})}catch(error){console.error(error);host.textContent="No se pudo acceder a la biblioteca local."}}
-function loadGlbBuffer(buffer,name){say("Cargando modelo…");lastModelBuffer=buffer.slice(0);lastModelName=name;new GLTFLoader().parse(buffer.slice(0),"",g=>{clear();root=g.scene;scene.add(root);root.traverse(o=>{if(o.isMesh)meshes.push(o)});populateMaterials();fit();syncMaterialColor();say("Modelo cargado: "+name+". Arrastra para girar y haz clic en la superficie para estampar.")},err=>{console.error(err);say("No se pudo leer el GLB o sus texturas.")})}
+function loadGlbBuffer(buffer,name){say("Cargando modelo…");lastModelBuffer=buffer.slice(0);lastModelName=name;new GLTFLoader().parse(buffer.slice(0),"",g=>{clear();root=g.scene;scene.add(root);root.traverse(o=>{if(o.isMesh)meshes.push(o)});isolateMeshMaterials();populateMaterials();fit();syncMaterialColor();say("Modelo cargado: "+name+". Arrastra para girar y haz clic en la superficie para estampar.")},err=>{console.error(err);say("No se pudo leer el GLB o sus texturas.")})}
 fileInput.addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;if(!f.name.toLowerCase().endsWith(".glb")){say("Selecciona un archivo .GLB con texturas integradas.");return}const rd=new FileReader();rd.onload=()=>loadGlbBuffer(rd.result,f.name);rd.onerror=()=>say("No se pudo leer el GLB o sus texturas.");rd.readAsArrayBuffer(f)});
 document.getElementById("saveModelToLibrary").addEventListener("click",async()=>{if(!lastModelBuffer){say("Carga primero un modelo GLB.");return}try{const name=(document.getElementById("libraryModelName").value||lastModelName.replace(/\.glb$/i,"")).trim();if(!name){say("Escribe un nombre para el modelo.");return}const id=crypto.randomUUID?crypto.randomUUID():Date.now()+"-"+Math.random();await libraryRequest("readwrite","put",{id,name,category:document.getElementById("libraryCategory").value,fileName:lastModelName,buffer:lastModelBuffer.slice(0),savedAt:Date.now()});await refreshLibrary();say("Modelo guardado en Mi biblioteca 3D.")}catch(error){console.error(error);say("No se pudo guardar el modelo en la biblioteca local.")}});
 document.getElementById("modelLibraryList").addEventListener("click",async e=>{const id=e.target.dataset.load||e.target.dataset.delete;if(!id)return;try{if(e.target.dataset.delete){await libraryRequest("readwrite","delete",id);await refreshLibrary();return}const model=await libraryRequest("readonly","get",id);if(model)loadGlbBuffer(model.buffer,model.fileName||model.name+".glb")}catch(error){console.error(error);say("No se pudo recuperar el modelo de la biblioteca.")}});
