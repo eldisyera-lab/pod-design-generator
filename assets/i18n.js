@@ -1,7 +1,7 @@
 (() => {
   const translations = {
     "PrintStudio — Estudio de diseño POD":"PrintStudio — POD Design Studio",
-    "Guardar proyecto":"Save project","Abrir proyecto":"Open project","Exportar PNG":"Export PNG",
+    "Guardar proyecto":"Save project","Guardar proyecto (.printstudio)":"Save project (.printstudio)","Abrir proyecto":"Open project","Exportar PNG":"Export PNG",
     "Producto":"Product","Formato de impresión":"Print format",
     "Camiseta / sudadera":"T-shirt / sweatshirt","Pulóver / hoodie":"Pullover / hoodie",
     "Taza / jarra":"Mug / jug","Bolsa / tote bag":"Bag / tote bag","Diseño cuadrado":"Square design",
