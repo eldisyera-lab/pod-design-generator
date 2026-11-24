@@ -319,3 +319,18 @@ test('shared GLB materials are isolated per mesh before independent recoloring',
   });
   expect(result).toEqual({ independent: true, hoodie: '#ff0000', body: '#336699' });
 });
+
+test('saving a loaded GLB gives visible progress and confirmation in the library panel', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
+  await expect(page.locator('#libraryStatus')).toContainText('Carga un modelo GLB');
+  await page.locator('#saveModelToLibrary').click();
+  await expect(page.locator('#libraryStatus')).toContainText('Carga primero un modelo GLB.');
+  await page.locator('#modelFile').setInputFiles({
+    name: 'visible-library-save.glb', mimeType: 'model/gltf-binary', buffer: makeTestGlb()
+  });
+  await expect(page.locator('#threeStatus')).toContainText('Modelo cargado', { timeout: 10000 });
+  await page.locator('#libraryModelName').fill('Modelo guardado visible');
+  await page.locator('#saveModelToLibrary').click();
+  await expect(page.locator('#libraryStatus')).toContainText('Modelo guardado en Mi biblioteca 3D.', { timeout: 10000 });
+  await expect(page.locator('#modelLibraryList')).toContainText('Modelo guardado visible');
+});
