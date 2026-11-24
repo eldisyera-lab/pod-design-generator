@@ -278,3 +278,27 @@ test('GLB material names Body and Skin translate both ways in the material selec
   await page.locator('#languageSelect').selectOption('es');
   await expect(page.locator('#materialSelect')).toContainText('Cuerpo · Piel');
 });
+
+
+test('GLB material localization handles the real character and garment naming patterns', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
+  const spanish = await page.evaluate(() => ['Cloth_hoodie','Cloth_briefs','Hair_short02','Eyebrows','Eyelashes','Eyes','Teeth','Tongue'].map(name => [name, window.printStudioTranslateMaterial(name)]));
+  expect(Object.fromEntries(spanish)).toMatchObject({
+    Cloth_hoodie: 'Tejido_Sudadera con capucha',
+    Cloth_briefs: 'Tejido_Ropa interior',
+    Hair_short02: 'Pelo_Corto02',
+    Eyebrows: 'Cejas',
+    Eyelashes: 'Pestañas',
+    Eyes: 'Ojos',
+    Teeth: 'Dientes',
+    Tongue: 'Lengua'
+  });
+  await page.locator('#languageSelect').selectOption('en');
+  const english = await page.evaluate(() => ['Cuerpo','Piel','Sudadera con capucha','Ropa interior'].map(name => [name, window.printStudioTranslateMaterial(name)]));
+  expect(Object.fromEntries(english)).toMatchObject({
+    Cuerpo: 'Body',
+    Piel: 'Skin',
+    'Sudadera con capucha': 'Hoodie',
+    'Ropa interior': 'Briefs'
+  });
+});
