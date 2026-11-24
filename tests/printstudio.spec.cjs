@@ -77,3 +77,64 @@ test('3D viewer and controls remain visible at desktop, tablet and mobile widths
     else expect(dimensions.y).toBeGreaterThan(workspace.y + workspace.height - 1);
   }
 });
+
+
+function makeTestGlb() {
+  const positions = new Float32Array([-1,-1,0, 1,-1,0, 1,1,0, -1,1,0]);
+  const normals = new Float32Array([0,0,1, 0,0,1, 0,0,1, 0,0,1]);
+  const indices = new Uint16Array([0,1,2, 0,2,3]);
+  const binary = Buffer.alloc(108);
+  Buffer.from(positions.buffer).copy(binary, 0);
+  Buffer.from(normals.buffer).copy(binary, 48);
+  Buffer.from(indices.buffer).copy(binary, 96);
+  const gltf = {
+    asset: { version: '2.0', generator: 'PrintStudio test fixture' },
+    scene: 0, scenes: [{ nodes: [0] }], nodes: [{ mesh: 0 }],
+    meshes: [{ primitives: [{ attributes: { POSITION: 0, NORMAL: 1 }, indices: 2, material: 0 }] }],
+    materials: [{ pbrMetallicRoughness: { baseColorFactor: [0.9, 0.9, 0.9, 1] } }],
+    buffers: [{ byteLength: 108 }],
+    bufferViews: [
+      { buffer: 0, byteOffset: 0, byteLength: 48, target: 34962 },
+      { buffer: 0, byteOffset: 48, byteLength: 48, target: 34962 },
+      { buffer: 0, byteOffset: 96, byteLength: 12, target: 34963 }
+    ],
+    accessors: [
+      { bufferView: 0, componentType: 5126, count: 4, type: 'VEC3', min: [-1,-1,0], max: [1,1,0] },
+      { bufferView: 1, componentType: 5126, count: 4, type: 'VEC3' },
+      { bufferView: 2, componentType: 5123, count: 6, type: 'SCALAR' }
+    ]
+  };
+  const json = Buffer.from(JSON.stringify(gltf));
+  const jsonLength = Math.ceil(json.length / 4) * 4;
+  const totalLength = 12 + 8 + jsonLength + 8 + binary.length;
+  const glb = Buffer.alloc(totalLength);
+  glb.writeUInt32LE(0x46546c67, 0);
+  glb.writeUInt32LE(2, 4);
+  glb.writeUInt32LE(totalLength, 8);
+  glb.writeUInt32LE(jsonLength, 12);
+  glb.writeUInt32LE(0x4e4f534a, 16);
+  json.copy(glb, 20);
+  glb.fill(0x20, 20 + json.length, 20 + jsonLength);
+  const binHeader = 20 + jsonLength;
+  glb.writeUInt32LE(binary.length, binHeader);
+  glb.writeUInt32LE(0x004e4942, binHeader + 4);
+  binary.copy(glb, binHeader + 8);
+  return glb;
+}
+
+test('a second click repositions the 3D print instead of stacking another copy', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
+  await page.locator('#modelFile').setInputFiles({
+    name: 'flat-test-surface.glb',
+    mimeType: 'model/gltf-binary',
+    buffer: makeTestGlb()
+  });
+  await expect(page.locator('#threeStatus')).toContainText('Modelo cargado', { timeout: 10000 });
+  const viewerCanvas = page.locator('#threePreview canvas');
+  await expect(viewerCanvas).toBeVisible();
+  const rect = await viewerCanvas.boundingBox();
+  await page.mouse.click(rect.x + rect.width / 2, rect.y + rect.height / 2);
+  await expect(page.locator('#threeStatus')).toContainText('Estampado colocado', { timeout: 5000 });
+  await page.mouse.click(rect.x + rect.width / 2 + 12, rect.y + rect.height / 2);
+  await expect(page.locator('#threeStatus')).toContainText('Estampado reposicionado: se sustituyó la colocación anterior.', { timeout: 5000 });
+});
