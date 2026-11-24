@@ -57,7 +57,7 @@ function materialLabel(value){
   if(window.printStudioTranslate){
     const direct=window.printStudioTranslate(raw);
     if(direct!==raw)return direct;
-    return raw.split(/([\s_.:/\\-]+)/).map(part=>{
+    return raw.split(/([\s_.·:/\\-]+)/).map(part=>{
       if(!part||/^[\s_.:/\\-]+$/.test(part)||/^\d+$/.test(part))return part;
       const translated=window.printStudioTranslate(part);
       return translated!==part?translated:part;

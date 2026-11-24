@@ -262,6 +262,19 @@ test('project save explains the native editable format and open workflow', async
   await page.locator('#saveBtn').click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe('printstudio-proyecto.printstudio');
-  await expect(page.locator('#status')).toContainText('archivo editable .printstudio');
+  await expect(page.locator('#status')).toContainText('Archivo .printstudio descargado');
   await expect(page.locator('#saveBtn')).toHaveAttribute('title', /Abrir proyecto/);
+});
+
+test('GLB material names Body and Skin translate both ways in the material selector', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
+  await page.locator('#modelFile').setInputFiles({
+    name: 'named-materials.glb', mimeType: 'model/gltf-binary', buffer: makeTestGlb()
+  });
+  await expect(page.locator('#threeStatus')).toContainText('Modelo cargado', { timeout: 10000 });
+  await expect(page.locator('#materialSelect')).toContainText('Cuerpo · Piel');
+  await page.locator('#languageSelect').selectOption('en');
+  await expect(page.locator('#materialSelect')).toContainText('Body · Skin');
+  await page.locator('#languageSelect').selectOption('es');
+  await expect(page.locator('#materialSelect')).toContainText('Cuerpo · Piel');
 });

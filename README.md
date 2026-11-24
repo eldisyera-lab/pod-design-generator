@@ -16,7 +16,7 @@ El lanzador busca automáticamente un puerto libre entre 8765 y 8795. Si una ins
 - Editor visual con texto, formas e imágenes.
 - Movimiento por arrastre, colores, tipografías, escala y capas.
 - Fondo transparente opcional.
-- Exportación PNG y guardado local del proyecto.
+- Exportación PNG y guardado local del proyecto. El botón Guardar proyecto descarga un archivo editable .printstudio (datos JSON); no es una imagen ni un documento para abrir con Word. Para recuperarlo, inicia PrintStudio y pulsa Abrir proyecto, seleccionando ese archivo.
 - Visor 3D basado en Three.js; carga modelos GLB locales.
 
 Las dimensiones son plantillas genéricas iniciales, no perfiles certificados de proveedores. Antes de imprimir o vender, comprueba medidas, sangrados, zonas seguras y perfiles de color exigidos por cada proveedor POD.
