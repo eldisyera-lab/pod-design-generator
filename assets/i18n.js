@@ -136,7 +136,16 @@
     translateDom();
     window.dispatchEvent(new CustomEvent("printstudio:languagechange",{detail:{language}}));
   }
+  // Diccionario independiente para nombres originales de materiales GLB.
+  const materialEsToEn = {"Cuerpo":"Body","Piel":"Skin","Malla":"Mesh","Cabeza":"Head","Pelo":"Hair","Cabello":"Hair","Torso":"Torso","Brazos":"Arms","Brazo":"Arm","Piernas":"Legs","Pierna":"Leg","Manos":"Hands","Mano":"Hand","Pies":"Feet","Pie":"Foot","Cuello":"Neck","Camiseta":"T-shirt","Camisa":"Shirt","Sudadera":"Sweatshirt","Sudadera con capucha":"Hoodie","Jersey":"Pullover","Pantalón":"Pants","Pantalones":"Trousers","Mallas":"Leggings","Ropa interior":"Underwear","Zapato":"Shoe","Calzado":"Footwear","Suela":"Sole","Cordones":"Laces","Guante":"Glove","Mochila":"Backpack","Bolsa":"Bag","Bolsa tote":"Tote","Taza":"Mug","Delantal":"Apron","Bolsillo":"Pocket","Capucha":"Hood","Cordón":"Drawstring","Vaqueros":"Jeans","Pantalones cortos":"Shorts","Falda":"Skirt","Vestido":"Dress","Chaqueta":"Jacket","Abrigo":"Coat","Manga":"Sleeve","Mangas":"Sleeves","Puño":"Cuff","Puños":"Cuffs","Cuello de prenda":"Collar","Cremallera":"Zipper","Bajo":"Hem","Tela":"Fabric","Tejido":"Cloth","Zapatos":"Shoes","Zapatillas":"Sneakers","Botas":"Boots","Calcetines":"Socks","Guantes":"Gloves","Gorra":"Cap","Sombrero":"Hat","Gafas":"Glasses","Predeterminado":"Default"};
+  const materialEnToEs=Object.fromEntries(Object.entries(materialEsToEn).map(([es,en])=>[en,es]));
+  function translateMaterial(value){
+    const raw=String(value||"Malla"),dict=language==="en"?materialEsToEn:materialEnToEs;
+    if(dict[raw]!==undefined)return dict[raw];
+    return raw.split(/([ _.·:/-]+)/).map(part=>!part||/^[ _.·:/-]+$/.test(part)||/^\d+$/.test(part)?part:(dict[part]!==undefined?dict[part]:part)).join("");
+  }
   window.printStudioTranslate=translate;
+  window.printStudioTranslateMaterial=translateMaterial;
   window.printStudioLanguage=()=>language;
   window.setPrintStudioLanguage=setLanguage;
   function init() {
