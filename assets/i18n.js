@@ -141,8 +141,17 @@
   const materialEnToEs=Object.fromEntries(Object.entries(materialEsToEn).map(([es,en])=>[en,es]));
   function translateMaterial(value){
     const raw=String(value||"Malla"),dict=language==="en"?materialEsToEn:materialEnToEs;
-    if(dict[raw]!==undefined)return dict[raw];
-    return raw.split(/([ _.·:/-]+)/).map(part=>!part||/^[ _.·:/-]+$/.test(part)||/^\d+$/.test(part)?part:(dict[part]!==undefined?dict[part]:part)).join("");
+    const lookup=new Map(Object.entries(dict).map(([key,val])=>[key.toLowerCase(),val]));
+    if(lookup.has(raw.toLowerCase()))return lookup.get(raw.toLowerCase());
+    // Preserve separators and numeric suffixes while translating case-insensitive
+    // GLB identifiers such as Cloth_hoodie, Hair_short02 and cloth-briefs.
+    return raw.split(/([ _.·:/-]+)/).map(part=>{
+      if(!part||/^[ _.·:/-]+$/.test(part)||/^\d+$/.test(part))return part;
+      const match=part.match(/^([A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)(\d*)$/);
+      const key=match?match[1].toLowerCase():part.toLowerCase();
+      const translated=lookup.get(key);
+      return translated!==undefined?translated+(match?match[2]:""):part;
+    }).join("");
   }
   window.printStudioTranslate=translate;
   window.printStudioTranslateMaterial=translateMaterial;
