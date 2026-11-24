@@ -130,7 +130,10 @@ test('a second click repositions the 3D print instead of stacking another copy',
     buffer: makeTestGlb()
   });
   await expect(page.locator('#threeStatus')).toContainText('Modelo cargado', { timeout: 10000 });
+  await expect(page.locator('#materialSelect')).toContainText('Cuerpo · Piel');
+  await page.locator('#languageSelect').selectOption('en');
   await expect(page.locator('#materialSelect')).toContainText('Body · Skin');
+  await page.locator('#languageSelect').selectOption('es');
   const viewerCanvas = page.locator('#threePreview canvas');
   await expect(viewerCanvas).toBeVisible();
   const rect = await viewerCanvas.boundingBox();
