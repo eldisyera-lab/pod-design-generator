@@ -20,3 +20,10 @@ El lanzador busca automáticamente un puerto libre entre 8765 y 8795. Si una ins
 - Visor 3D basado en Three.js; carga modelos GLB locales.
 
 Las dimensiones son plantillas genéricas iniciales, no perfiles certificados de proveedores. Antes de imprimir o vender, comprueba medidas, sangrados, zonas seguras y perfiles de color exigidos por cada proveedor POD.
+
+## Arquitectura y catálogo POD
+
+- [Arquitectura de productos y criterios de aceptación](docs/ARQUITECTURA_PRODUCTOS_Y_CRITERIOS.md): separación entre editor 2D, motor de producción, visor 3D y reglas para aprobar modelos comerciales.
+- [Catálogo inicial de diez familias POD](assets/products/catalog.json): catálogo de planificación. Las plantillas y dimensiones de proveedor permanecen pendientes de verificación; no son todavía perfiles de producción certificados.
+
+**Regla de calidad:** ningún producto se considera listo para vender hasta validar la plantilla del proveedor, el archivo exportado y la maqueta del modelo real.
