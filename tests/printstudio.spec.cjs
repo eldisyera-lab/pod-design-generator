@@ -89,9 +89,9 @@ function makeTestGlb() {
   Buffer.from(indices.buffer).copy(binary, 96);
   const gltf = {
     asset: { version: '2.0', generator: 'PrintStudio test fixture' },
-    scene: 0, scenes: [{ nodes: [0] }], nodes: [{ mesh: 0 }],
-    meshes: [{ primitives: [{ attributes: { POSITION: 0, NORMAL: 1 }, indices: 2, material: 0 }] }],
-    materials: [{ pbrMetallicRoughness: { baseColorFactor: [0.9, 0.9, 0.9, 1] } }],
+    scene: 0, scenes: [{ nodes: [0] }], nodes: [{ mesh: 0, name: 'Body' }],
+    meshes: [{ name: 'Body', primitives: [{ attributes: { POSITION: 0, NORMAL: 1 }, indices: 2, material: 0 }] }],
+    materials: [{ name: 'Skin', pbrMetallicRoughness: { baseColorFactor: [0.9, 0.9, 0.9, 1] } }],
     buffers: [{ byteLength: 108 }],
     bufferViews: [
       { buffer: 0, byteOffset: 0, byteLength: 48, target: 34962 },
@@ -130,6 +130,7 @@ test('a second click repositions the 3D print instead of stacking another copy',
     buffer: makeTestGlb()
   });
   await expect(page.locator('#threeStatus')).toContainText('Modelo cargado', { timeout: 10000 });
+  await expect(page.locator('#materialSelect')).toContainText('Body · Skin');
   const viewerCanvas = page.locator('#threePreview canvas');
   await expect(viewerCanvas).toBeVisible();
   const rect = await viewerCanvas.boundingBox();
@@ -180,4 +181,74 @@ test('3D placement and reposition messages follow the selected English language'
   await expect(page.locator('#threeStatus')).toHaveText('Print placed with transparent artwork, without the canvas background.');
   await page.mouse.click(rect.x + rect.width / 2 + 12, rect.y + rect.height / 2);
   await expect(page.locator('#threeStatus')).toHaveText('Print repositioned: the previous placement was replaced.');
+});
+
+test('curved text controls render on the canvas and persist in saved projects', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
+  await page.locator('#addText').click();
+  await expect(page.locator('#textCurveControls')).toBeVisible();
+  await page.locator('#textValue').fill('CROCHET PARA APRENDER');
+  await page.locator('#textCurve').selectOption('arc-up');
+  await page.locator('#curveAmount').fill('72');
+  await page.locator('#curveOrientation').selectOption('inside');
+  const result = await page.evaluate(() => {
+    const art = window.createPrintTextureCanvas();
+    const pixels = art.getContext('2d').getImageData(0, 0, art.width, art.height).data;
+    let visible = 0;
+    for (let i = 3; i < pixels.length; i += 4) if (pixels[i] > 0) visible++;
+    return { visible, stored: document.getElementById('textCurve').value };
+  });
+  expect(result.visible).toBeGreaterThan(100);
+  expect(result.stored).toBe('arc-up');
+  await page.locator('#saveBtn').click();
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('printstudio-project')).items[0].curve)).toBe('arc-up');
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('printstudio-project')).items[0]);
+  expect(saved.curveAmount).toBeCloseTo(0.72, 2);
+  expect(saved.curveOrientation).toBe('inside');
+});
+
+test('curved text controls are translated in English and restore Spanish', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
+  await page.locator('#addText').click();
+  await page.locator('#languageSelect').selectOption('en');
+  await expect(page.locator('#textCurveControls')).toContainText('Text curvature');
+  await expect(page.locator('#textCurve option[value="arc-up"]')).toHaveText('Upper arc');
+  await page.locator('#languageSelect').selectOption('es');
+  await expect(page.locator('#textCurveControls')).toContainText('Curvatura del texto');
+  await expect(page.locator('#textCurve option[value="arc-down"]')).toHaveText('Arco inferior');
+});
+
+test('upper arc, lower arc and circular text all render artwork', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
+  await page.locator('#addText').click();
+  await page.locator('#textValue').fill('TEJER CON AMOR');
+  for (const mode of ['arc-up', 'arc-down', 'circle']) {
+    await page.locator('#textCurve').selectOption(mode);
+    const result = await page.evaluate(() => {
+      const art = window.createPrintTextureCanvas();
+      const pixels = art.getContext('2d').getImageData(0, 0, art.width, art.height).data;
+      let visible = 0;
+      for (let i = 3; i < pixels.length; i += 4) if (pixels[i] > 0) visible++;
+      return { visible, width: art.width, height: art.height };
+    });
+    expect(result.visible).toBeGreaterThan(100);
+    expect(result.width).toBeGreaterThan(0);
+    expect(result.height).toBeGreaterThan(0);
+  }
+});
+
+test('3D model library stores GLB files persistently and reloads them', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
+  await page.locator('#modelFile').setInputFiles({
+    name: 'library-flat-test.glb', mimeType: 'model/gltf-binary', buffer: makeTestGlb()
+  });
+  await expect(page.locator('#threeStatus')).toContainText('Modelo cargado', { timeout: 10000 });
+  await page.locator('#libraryModelName').fill('Mi superficie de prueba');
+  await page.locator('#libraryCategory').selectOption('shirts');
+  await page.locator('#saveModelToLibrary').click();
+  await expect(page.locator('#modelLibraryList')).toContainText('Mi superficie de prueba');
+  await page.reload({ waitUntil: 'networkidle' });
+  await expect(page.locator('#modelLibraryList')).toContainText('Mi superficie de prueba');
+  await page.locator('#modelLibraryList').getByRole('button', { name: 'Cargar' }).click();
+  await expect(page.locator('#threeStatus')).toContainText('Modelo cargado', { timeout: 10000 });
 });
