@@ -73,9 +73,13 @@ function place(x,y){
  try{
   const g=new DecalGeometry(h.object,h.point.clone().addScaledVector(n,.002),e,new THREE.Vector3(v,v*(artwork.height/artwork.width),Math.max(.04,v*.3)));
   if(!g.attributes.position||g.attributes.position.count===0){g.dispose();say("No se pudo proyectar en esa zona. Prueba una superficie más plana.");return}
+  // Un solo estampado activo: un nuevo clic sustituye la posición anterior.
+  // Así evitamos que los clics repetidos acumulen copias superpuestas.
+  const hadPreviousPrint=decals.length>0;
+  removePrints(false);
   const m=new THREE.MeshBasicMaterial({map:tex(),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,side:THREE.DoubleSide});
   const d=new THREE.Mesh(g,m);scene.add(d);decals.push(d);
-  say("Estampado colocado con el arte transparente, sin el fondo del lienzo.");
+  say(hadPreviousPrint?"Estampado reposicionado: se sustituyó la colocación anterior.":"Estampado colocado con el arte transparente, sin el fondo del lienzo.");
  }catch(err){console.error(err);say("No se pudo proyectar en esa superficie. Prueba otra zona del modelo.")}
 }
 function update(){if(!decals.length){say("Primero carga un GLB y haz clic en la superficie para colocar el estampado.");return}const oldTextures=new Set();const t=tex();decals.forEach(d=>{if(d.material.map)oldTextures.add(d.material.map);d.material.map=t;d.material.needsUpdate=true});oldTextures.forEach(old=>{if(old!==t)old.dispose()});say("Estampado actualizado con el diseño transparente, sin fondo ni controles de selección.")}
