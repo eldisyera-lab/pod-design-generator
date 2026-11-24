@@ -142,14 +142,17 @@
   function translateMaterial(value){
     const raw=String(value||"Malla"),dict=language==="en"?materialEsToEn:materialEnToEs;
     const lookup=new Map(Object.entries(dict).map(([key,val])=>[key.toLowerCase(),val]));
+    const tokenAliases=language==="en"
+      ? {briefs:"Ropa interior",underwear:"Ropa interior",hair:"Pelo",short:"Corto"}
+      : {briefs:"Briefs",underwear:"Underwear",hair:"Hair",pelo:"Hair",cabello:"Hair",corto:"Short",corta:"Short"};
     if(lookup.has(raw.toLowerCase()))return lookup.get(raw.toLowerCase());
-    // Preserve separators and numeric suffixes while translating case-insensitive
-    // GLB identifiers such as Cloth_hoodie, Hair_short02 and cloth-briefs.
+    // Keep GLB separators and numeric suffixes; use context-safe aliases for common
+    // character tokens so Hair_short02 and Cloth_briefs are not mistranslated.
     return raw.split(/([ _.·:/-]+)/).map(part=>{
       if(!part||/^[ _.·:/-]+$/.test(part)||/^\d+$/.test(part))return part;
       const match=part.match(/^([A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)(\d*)$/);
       const key=match?match[1].toLowerCase():part.toLowerCase();
-      const translated=lookup.get(key);
+      const translated=tokenAliases[key]??lookup.get(key);
       return translated!==undefined?translated+(match?match[2]:""):part;
     }).join("");
   }
