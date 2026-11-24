@@ -138,3 +138,31 @@ test('a second click repositions the 3D print instead of stacking another copy',
   await page.mouse.click(rect.x + rect.width / 2 + 12, rect.y + rect.height / 2);
   await expect(page.locator('#threeStatus')).toContainText('Estampado reposicionado: se sustituyó la colocación anterior.', { timeout: 5000 });
 });
+
+
+test('Spanish and English selector translates the 2D editor, 3D viewer and remembers the choice', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
+  const language = page.locator('#languageSelect');
+  await expect(language).toHaveValue('es');
+  await expect(page.locator('#addText')).toContainText('Añadir texto');
+  await expect(page.locator('#threeStatus')).toContainText('Visor listo');
+
+  await language.selectOption('en');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await expect(page.locator('#addText')).toContainText('Add text');
+  await expect(page.locator('#saveBtn')).toContainText('Save project');
+  await expect(page.locator('#product option[value="mug"]')).toHaveText('Mug / jug');
+  await expect(page.locator('#threeStatus')).toContainText('Viewer ready');
+
+  await page.locator('#removeBgBtn').click();
+  await expect(page.locator('#status')).toHaveText('Select an image on the canvas first.');
+  await language.selectOption('es');
+  await expect(page.locator('#status')).toHaveText('Selecciona primero una imagen del lienzo.');
+  await expect(page.locator('#threeStatus')).toContainText('Visor listo');
+
+  await language.selectOption('en');
+  await page.reload({ waitUntil: 'networkidle' });
+  await expect(page.locator('#languageSelect')).toHaveValue('en');
+  await expect(page.locator('#addText')).toContainText('Add text');
+  await expect(page.locator('#threeStatus')).toContainText('Viewer ready');
+});
