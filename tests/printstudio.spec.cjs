@@ -302,3 +302,20 @@ test('GLB material localization handles the real character and garment naming pa
     'Ropa interior': 'Briefs'
   });
 });
+
+test('shared GLB materials are isolated per mesh before independent recoloring', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
+  const result = await page.evaluate(() => {
+    const shared = { color: { value: '#336699' } };
+    const clone = material => ({ ...material, color: { ...material.color } });
+    const meshes = [{ name: 'Cloth_hoodie', material: shared }, { name: 'Body', material: shared }];
+    const isolated = meshes.map(mesh => ({ ...mesh, material: clone(mesh.material) }));
+    isolated[0].material.color.value = '#ff0000';
+    return {
+      independent: isolated[0].material !== isolated[1].material,
+      hoodie: isolated[0].material.color.value,
+      body: isolated[1].material.color.value
+    };
+  });
+  expect(result).toEqual({ independent: true, hoodie: '#ff0000', body: '#336699' });
+});
