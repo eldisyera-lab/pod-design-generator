@@ -166,3 +166,18 @@ test('Spanish and English selector translates the 2D editor, 3D viewer and remem
   await expect(page.locator('#addText')).toContainText('Add text');
   await expect(page.locator('#threeStatus')).toContainText('Viewer ready');
 });
+
+
+test('3D placement and reposition messages follow the selected English language', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
+  await page.locator('#languageSelect').selectOption('en');
+  await page.locator('#modelFile').setInputFiles({
+    name: 'flat-test-surface.glb', mimeType: 'model/gltf-binary', buffer: makeTestGlb()
+  });
+  await expect(page.locator('#threeStatus')).toContainText('Model loaded', { timeout: 10000 });
+  const rect = await page.locator('#threePreview canvas').boundingBox();
+  await page.mouse.click(rect.x + rect.width / 2, rect.y + rect.height / 2);
+  await expect(page.locator('#threeStatus')).toHaveText('Print placed with transparent artwork, without the canvas background.');
+  await page.mouse.click(rect.x + rect.width / 2 + 12, rect.y + rect.height / 2);
+  await expect(page.locator('#threeStatus')).toHaveText('Print repositioned: the previous placement was replaced.');
+});
