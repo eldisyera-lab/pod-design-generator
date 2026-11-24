@@ -1,0 +1,256 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "0.1.0",
+  "locale": [
+    "es",
+    "en"
+  ],
+  "note": "Catálogo de planificación. Ninguna dimensión o plantilla se considera lista para producción hasta asociarla a un proveedor y variante verificables.",
+  "products": [
+    {
+      "id": "tshirt",
+      "priority": 1,
+      "names": {
+        "es": "Camisetas",
+        "en": "T-shirts"
+      },
+      "family": "apparel",
+      "mockupStatus": "candidate-required",
+      "productionStatus": "provider-template-required",
+      "printMethods": [
+        "dtf",
+        "dtg",
+        "sublimation-if-provider-supports"
+      ],
+      "zones": [
+        "front",
+        "back",
+        "sleeve-left",
+        "sleeve-right"
+      ],
+      "variants": [
+        "size",
+        "garment-color"
+      ],
+      "requiresUv": true
+    },
+    {
+      "id": "hoodie",
+      "priority": 2,
+      "names": {
+        "es": "Sudaderas y hoodies",
+        "en": "Sweatshirts and hoodies"
+      },
+      "family": "apparel",
+      "mockupStatus": "candidate-required",
+      "productionStatus": "provider-template-required",
+      "printMethods": [
+        "dtf",
+        "dtg",
+        "embroidery-if-provider-supports"
+      ],
+      "zones": [
+        "front",
+        "back",
+        "sleeve-left",
+        "sleeve-right"
+      ],
+      "variants": [
+        "size",
+        "garment-color"
+      ],
+      "requiresUv": true
+    },
+    {
+      "id": "mug",
+      "priority": 3,
+      "names": {
+        "es": "Tazas y jarras",
+        "en": "Mugs and jugs"
+      },
+      "family": "drinkware",
+      "mockupStatus": "candidate-required",
+      "productionStatus": "provider-template-required",
+      "printMethods": [
+        "sublimation-if-provider-supports"
+      ],
+      "zones": [
+        "wraparound"
+      ],
+      "variants": [
+        "capacity",
+        "handle-side"
+      ],
+      "requiresUv": true
+    },
+    {
+      "id": "tote",
+      "priority": 4,
+      "names": {
+        "es": "Bolsas tote",
+        "en": "Tote bags"
+      },
+      "family": "bags",
+      "mockupStatus": "candidate-required",
+      "productionStatus": "provider-template-required",
+      "printMethods": [
+        "dtg",
+        "dtf",
+        "sublimation-if-provider-supports"
+      ],
+      "zones": [
+        "front-panel",
+        "back-panel"
+      ],
+      "variants": [
+        "bag-color",
+        "size"
+      ],
+      "requiresUv": true
+    },
+    {
+      "id": "phone-case",
+      "priority": 5,
+      "names": {
+        "es": "Fundas para móviles",
+        "en": "Phone cases"
+      },
+      "family": "accessories",
+      "mockupStatus": "candidate-required",
+      "productionStatus": "device-and-provider-template-required",
+      "printMethods": [
+        "sublimation-if-provider-supports",
+        "uv-print-if-provider-supports"
+      ],
+      "zones": [
+        "case-back"
+      ],
+      "variants": [
+        "phone-model",
+        "case-finish"
+      ],
+      "requiresUv": true,
+      "deviceSpecific": true
+    },
+    {
+      "id": "cap",
+      "priority": 6,
+      "names": {
+        "es": "Gorras y sombreros",
+        "en": "Caps and hats"
+      },
+      "family": "apparel-accessories",
+      "mockupStatus": "candidate-required",
+      "productionStatus": "provider-template-required",
+      "printMethods": [
+        "embroidery",
+        "dtf-if-provider-supports"
+      ],
+      "zones": [
+        "front-panel",
+        "side-panel-if-supported"
+      ],
+      "variants": [
+        "cap-style",
+        "cap-color"
+      ],
+      "requiresUv": true
+    },
+    {
+      "id": "tumbler",
+      "priority": 7,
+      "names": {
+        "es": "Tumblers y botellas",
+        "en": "Tumblers and bottles"
+      },
+      "family": "drinkware",
+      "mockupStatus": "candidate-required",
+      "productionStatus": "provider-template-required",
+      "printMethods": [
+        "wraparound-sublimation-if-provider-supports"
+      ],
+      "zones": [
+        "wraparound"
+      ],
+      "variants": [
+        "capacity",
+        "diameter",
+        "finish"
+      ],
+      "requiresUv": true
+    },
+    {
+      "id": "pillow",
+      "priority": 8,
+      "names": {
+        "es": "Cojines",
+        "en": "Pillows"
+      },
+      "family": "home-decor",
+      "mockupStatus": "candidate-required",
+      "productionStatus": "provider-template-required",
+      "printMethods": [
+        "sublimation-if-provider-supports",
+        "dtg-if-provider-supports"
+      ],
+      "zones": [
+        "front",
+        "back"
+      ],
+      "variants": [
+        "shape",
+        "size",
+        "fabric"
+      ],
+      "requiresUv": true
+    },
+    {
+      "id": "stickers",
+      "priority": 9,
+      "names": {
+        "es": "Pegatinas",
+        "en": "Stickers"
+      },
+      "family": "flat-print",
+      "mockupStatus": "not-required-for-production",
+      "productionStatus": "provider-template-required",
+      "printMethods": [
+        "digital-print-and-cut"
+      ],
+      "zones": [
+        "cutline"
+      ],
+      "variants": [
+        "finish",
+        "sheet-layout"
+      ],
+      "requiresUv": false,
+      "requiresCutline": true
+    },
+    {
+      "id": "ornaments",
+      "priority": 10,
+      "names": {
+        "es": "Adornos y decoración estacional",
+        "en": "Ornaments and seasonal decor"
+      },
+      "family": "home-decor",
+      "mockupStatus": "candidate-required",
+      "productionStatus": "provider-template-required",
+      "printMethods": [
+        "sublimation-if-provider-supports",
+        "direct-print-if-provider-supports"
+      ],
+      "zones": [
+        "front",
+        "back"
+      ],
+      "variants": [
+        "shape",
+        "material",
+        "size"
+      ],
+      "requiresUv": true
+    }
+  ]
+}
