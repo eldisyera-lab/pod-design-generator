@@ -7,7 +7,8 @@ const camera=new THREE.PerspectiveCamera(35,1,.01,1000),renderer=new THREE.WebGL
 scene.add(new THREE.HemisphereLight(0xffffff,0x697386,2));const key=new THREE.DirectionalLight(0xffffff,3);key.position.set(-3,5,5);scene.add(key);const fill=new THREE.DirectionalLight(0xc8d8ff,1.4);fill.position.set(4,1,3);scene.add(fill);
 let root=null,meshes=[],materials=[],decals=[],target=new THREE.Vector3(),distance=4,yaw=-.25,pitch=.08,down=null,drag=false,lx=0,ly=0;
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
-const say=s=>status.textContent=s;
+const say=s=>{status.dataset.message=s;status.textContent=window.printStudioTranslate?window.printStudioTranslate(s):s};
+window.addEventListener("printstudio:languagechange",()=>{if(status.dataset.message)status.textContent=window.printStudioTranslate?window.printStudioTranslate(status.dataset.message):status.dataset.message});
 function resize(){let w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
 function frame(){camera.position.set(target.x+distance*Math.sin(yaw)*Math.cos(pitch),target.y+distance*Math.sin(pitch),target.z+distance*Math.cos(yaw)*Math.cos(pitch));camera.lookAt(target);renderer.render(scene,camera);requestAnimationFrame(frame)}
 function removePrints(showMessage=true){
