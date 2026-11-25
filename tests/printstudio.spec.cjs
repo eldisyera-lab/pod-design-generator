@@ -122,6 +122,80 @@ function makeTestGlb() {
   return glb;
 }
 
+
+function makeMultiMaterialTestGlb() {
+  const positions = new Float32Array([-1,-1,0, 1,-1,0, 1,1,0, -1,1,0]);
+  const normals = new Float32Array([0,0,1, 0,0,1, 0,0,1, 0,0,1]);
+  const indices = new Uint16Array([0,1,2, 0,2,3]);
+  const binary = Buffer.alloc(108);
+  Buffer.from(positions.buffer).copy(binary, 0);
+  Buffer.from(normals.buffer).copy(binary, 48);
+  Buffer.from(indices.buffer).copy(binary, 96);
+  const gltf = {
+    asset: { version: '2.0', generator: 'PrintStudio multi-material test fixture' },
+    scene: 0, scenes: [{ nodes: [0, 1] }],
+    nodes: [{ name: 'ShirtBody', mesh: 0 }, { name: 'ShirtTrim', mesh: 1 }],
+    meshes: [
+      { name: 'ShirtBody', primitives: [{ attributes: { POSITION: 0, NORMAL: 1 }, indices: 2, material: 0 }] },
+      { name: 'ShirtTrim', primitives: [{ attributes: { POSITION: 0, NORMAL: 1 }, indices: 2, material: 1 }] }
+    ],
+    materials: [
+      { name: 'BlueFabric', pbrMetallicRoughness: { baseColorFactor: [0.05, 0.15, 0.8, 1] } },
+      { name: 'BlueSeams', pbrMetallicRoughness: { baseColorFactor: [0.02, 0.08, 0.5, 1] } }
+    ],
+    buffers: [{ byteLength: 108 }],
+    bufferViews: [
+      { buffer: 0, byteOffset: 0, byteLength: 48, target: 34962 },
+      { buffer: 0, byteOffset: 48, byteLength: 48, target: 34962 },
+      { buffer: 0, byteOffset: 96, byteLength: 12, target: 34963 }
+    ],
+    accessors: [
+      { bufferView: 0, componentType: 5126, count: 4, type: 'VEC3', min: [-1,-1,0], max: [1,1,0] },
+      { bufferView: 1, componentType: 5126, count: 4, type: 'VEC3' },
+      { bufferView: 2, componentType: 5123, count: 6, type: 'SCALAR' }
+    ]
+  };
+  const json = Buffer.from(JSON.stringify(gltf));
+  const jsonLength = Math.ceil(json.length / 4) * 4;
+  const totalLength = 12 + 8 + jsonLength + 8 + binary.length;
+  const glb = Buffer.alloc(totalLength);
+  glb.writeUInt32LE(0x46546c67, 0);
+  glb.writeUInt32LE(2, 4);
+  glb.writeUInt32LE(totalLength, 8);
+  glb.writeUInt32LE(jsonLength, 12);
+  glb.writeUInt32LE(0x4e4f534a, 16);
+  json.copy(glb, 20);
+  glb.fill(0x20, 20 + json.length, 20 + jsonLength);
+  const binHeader = 20 + jsonLength;
+  glb.writeUInt32LE(binary.length, binHeader);
+  glb.writeUInt32LE(0x004e4942, binHeader + 4);
+  binary.copy(glb, binHeader + 8);
+  return glb;
+}
+
+test('GLB recoloring defaults to all garment materials, including separate trim meshes', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
+  await page.locator('#modelFile').setInputFiles({
+    name: 'multi-material-shirt.glb',
+    mimeType: 'model/gltf-binary',
+    buffer: makeMultiMaterialTestGlb()
+  });
+  await expect(page.locator('#threeStatus')).toContainText('Modelo cargado', { timeout: 10000 });
+  const selector = page.locator('#materialSelect');
+  await expect(selector).toHaveValue('-1');
+  await expect(selector).toContainText('ShirtBody · BlueFabric');
+  await expect(selector).toContainText('ShirtTrim · BlueSeams');
+  await expect(selector.locator('option')).toHaveCount(3);
+
+  // With "-1" selected, the recolor handler targets every material entry.
+  await page.locator('#garmentColor').fill('#000000');
+  await expect(selector).toHaveValue('-1');
+
+  // Per-piece editing remains available when the user explicitly selects one.
+  await selector.selectOption('1');
+  await expect(selector).toHaveValue('1');
+});
+
 test('a second click repositions the 3D print instead of stacking another copy', async ({ page }) => {
   await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
   await page.locator('#modelFile').setInputFiles({
