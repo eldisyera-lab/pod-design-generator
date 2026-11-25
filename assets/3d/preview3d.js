@@ -75,7 +75,9 @@ function materialLabel(value){const raw=String(value||"Malla");return window.pri
     materialSelect.appendChild(op);
    });
   });
-  if(materials.length)materialSelect.value="0";
+  // Al cargar un GLB, aplicar el color a toda la prenda por defecto.
+  // El usuario puede elegir una pieza concreta desde el desplegable.
+  materialSelect.value="-1";
  }
 window.addEventListener("printstudio:languagechange",()=>{if(root)populateMaterials()});
 function selectedMaterialEntries(){const idx=Number(materialSelect.value);return idx<0?materials:materials[idx]?[materials[idx]]:[]}
