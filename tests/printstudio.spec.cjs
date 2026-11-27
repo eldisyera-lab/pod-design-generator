@@ -326,7 +326,7 @@ test('3D model library stores GLB files persistently and reloads them', async ({
   await expect(page.locator('#modelLibraryList')).toContainText('Mi superficie de prueba');
   await page.reload({ waitUntil: 'networkidle' });
   await expect(page.locator('#modelLibraryList')).toContainText('Mi superficie de prueba');
-  await page.locator('#modelLibraryList').getByRole('button', { name: 'Cargar' }).click();
+  await page.locator('#modelLibraryList').getByRole('button', { name: 'Usar modelo' }).click();
   await expect(page.locator('#threeStatus')).toContainText('Modelo cargado', { timeout: 10000 });
 });
 
