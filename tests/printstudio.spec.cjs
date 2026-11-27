@@ -408,3 +408,45 @@ test('saving a loaded GLB gives visible progress and confirmation in the library
   await expect(page.locator('#libraryStatus')).toContainText('Modelo guardado en Mi biblioteca 3D.', { timeout: 10000 });
   await expect(page.locator('#modelLibraryList')).toContainText('Modelo guardado visible');
 });
+
+
+test('UV island topology groups faces by shared UV edges, including duplicated seam vertices', async () => {
+  const fs = require('node:fs');
+  const source = fs.readFileSync(require('node:path').join(__dirname, '../assets/3d/uv-islands.js'), 'utf8');
+  const moduleUrl = 'data:text/javascript;base64,' + Buffer.from(source).toString('base64');
+  const { buildUvIslands } = await import(moduleUrl);
+
+  // Face 0 and 1 share the same UV edge but use duplicate vertex indices.
+  // Face 2 is a separate island, even though it lives in the same geometry.
+  const uv = new Float32Array([
+    0,0, 1,0, 1,1,
+    0,0, 1,1, 0,1,
+    2,0, 3,0, 2,1
+  ]);
+  const indices = new Uint16Array([0,1,2, 3,4,5, 6,7,8]);
+  const result = buildUvIslands({ array: uv, itemSize: 2 }, indices);
+
+  expect(result.faceCount).toBe(3);
+  expect(result.islands).toHaveLength(2);
+  expect(Array.from(result.faceToIsland)).toEqual([0,0,1]);
+  expect(result.islands[0].triangleCount).toBe(2);
+  expect(result.islands[1].bounds).toEqual({ minU: 2, minV: 0, maxU: 3, maxV: 1 });
+});
+
+test('UV island topology supports non-indexed geometry and rejects malformed buffers', async () => {
+  const fs = require('node:fs');
+  const source = fs.readFileSync(require('node:path').join(__dirname, '../assets/3d/uv-islands.js'), 'utf8');
+  const moduleUrl = 'data:text/javascript;base64,' + Buffer.from(source).toString('base64');
+  const { buildUvIslands } = await import(moduleUrl);
+
+  const nonIndexed = buildUvIslands(new Float32Array([
+    0,0, 1,0, 0,1,
+    2,0, 3,0, 2,1
+  ]));
+  expect(nonIndexed.islands).toHaveLength(2);
+  expect(Array.from(nonIndexed.faceToIsland)).toEqual([0,1]);
+
+  expect(buildUvIslands([0,0, 1,0])).toBeNull();
+  expect(buildUvIslands(new Float32Array([0,0, 1,0, 0,1]), new Uint16Array([0,1,9]))).toBeNull();
+  expect(buildUvIslands(new Float32Array([0,0, 1,0, NaN,1]))).toBeNull();
+});
