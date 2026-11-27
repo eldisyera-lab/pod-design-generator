@@ -82,7 +82,7 @@ function materialLabel(value){const raw=String(value||"Malla");return window.pri
 window.addEventListener("printstudio:languagechange",()=>{if(root)populateMaterials()});
 function selectedMaterialEntries(){const idx=Number(materialSelect.value);return idx<0?materials:materials[idx]?[materials[idx]]:[]}
 function syncMaterialColor(){const entry=selectedMaterialEntries().find(x=>x.material?.color);if(entry)colorInput.value="#"+entry.material.color.getHexString()}
-function recolor(hex){if(!root)return;const c=new THREE.Color(hex);selectedMaterialEntries().forEach(entry=>{const m=entry.material;if(m.color){m.color.copy(c);m.needsUpdate=true}})}
+function recolor(hex){if(!root)return;const entries=selectedMaterialEntries();const onlyOneTexturedMaterial=materials.length===1&&entries.length===1&&Boolean(entries[0].material?.map);if(onlyOneTexturedMaterial){say("Este modelo utiliza una sola textura para toda la figura. El cambio de color global se ha bloqueado para no teñir la piel, el pelo y la ropa a la vez. Necesita edición por zonas UV.");return}const c=new THREE.Color(hex);entries.forEach(entry=>{const m=entry.material;if(m.color){m.color.copy(c);m.needsUpdate=true}})}
 function printArtwork(){return typeof window.createPrintTextureCanvas==="function"?window.createPrintTextureCanvas():canvas}
 function tex(){let artwork=printArtwork(),t=new THREE.CanvasTexture(artwork);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();t.needsUpdate=true;return t}
 function place(x,y){
