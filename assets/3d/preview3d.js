@@ -1,7 +1,8 @@
 import * as THREE from "../vendor/three.module.min.js";
 import {GLTFLoader} from "./loaders/GLTFLoader.js";
 import {DecalGeometry} from "./geometries/DecalGeometry.js";
-const host=document.getElementById("threePreview"),canvas=document.getElementById("canvas"),fileInput=document.getElementById("modelFile"),colorInput=document.getElementById("garmentColor"),sizeInput=document.getElementById("printSize"),status=document.getElementById("threeStatus");\nconst materialSelect=document.getElementById("materialSelect");
+const host=document.getElementById("threePreview"),canvas=document.getElementById("canvas"),fileInput=document.getElementById("modelFile"),colorInput=document.getElementById("garmentColor"),sizeInput=document.getElementById("printSize"),status=document.getElementById("threeStatus");
+const materialSelect=document.getElementById("materialSelect");
 const scene=new THREE.Scene();scene.background=new THREE.Color("#202a38");
 const camera=new THREE.PerspectiveCamera(35,1,.01,1000),renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;host.replaceChildren(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xffffff,0x697386,2));const key=new THREE.DirectionalLight(0xffffff,3);key.position.set(-3,5,5);scene.add(key);const fill=new THREE.DirectionalLight(0xc8d8ff,1.4);fill.position.set(4,1,3);scene.add(fill);
