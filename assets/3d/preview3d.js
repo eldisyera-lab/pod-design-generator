@@ -107,9 +107,14 @@ function buildTextileSurface(sourceMesh,material){
  let selectedFaces=0;
  for(let face=0;face<faceCount;face++){
   const a=vertexAt(face,0),b=vertexAt(face,1),d=vertexAt(face,2);
-  if(Number(sampleIsTextile(a))+Number(sampleIsTextile(b))+Number(sampleIsTextile(d))<2)continue;
+  const ua=uv.getX(a),va=uv.getY(a),ub=uv.getX(b),vb=uv.getY(b),ud=uv.getX(d),vd=uv.getY(d);
+  const allCornersTextile=sampleIsTextile(a)&&sampleIsTextile(b)&&sampleIsTextile(d);
+  const centerU=(ua+ub+ud)/3,centerV=(va+vb+vd)/3,cx=Math.max(0,Math.min(w-1,Math.floor(centerU*w))),cy=Math.max(0,Math.min(h-1,Math.floor((1-centerV)*h))),cp=(cy*w+cx)*4;
+  const centerTextile=isTextilePixel(pixels[cp],pixels[cp+1],pixels[cp+2]);
+  // Conservative boundary rule: require all three UV corners and the triangle center to be textile.
+  if(!allCornersTextile||!centerTextile)continue;
   selectedFaces++;
-  const ua=uv.getX(a),va=uv.getY(a),ub=uv.getX(b),vb=uv.getY(b),ud=uv.getX(d),vd=uv.getY(d);maskContext.beginPath();maskContext.moveTo(ua*w,(1-va)*h);maskContext.lineTo(ub*w,(1-vb)*h);maskContext.lineTo(ud*w,(1-vd)*h);maskContext.closePath();maskContext.fill();
+  maskContext.beginPath();maskContext.moveTo(ua*w,(1-va)*h);maskContext.lineTo(ub*w,(1-vb)*h);maskContext.lineTo(ud*w,(1-vd)*h);maskContext.closePath();maskContext.fill();
   for(const vertex of [a,b,d]){
    positions.push(pos.getX(vertex),pos.getY(vertex),pos.getZ(vertex));
    if(norm)normals.push(norm.getX(vertex),norm.getY(vertex),norm.getZ(vertex));
