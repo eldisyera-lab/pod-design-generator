@@ -7,7 +7,7 @@
 4. Se abrirá Chrome o tu navegador predeterminado en la dirección local que indique la ventana negra.
 5. Mantén abierta esa ventana mientras trabajas. Para cerrar el servidor, pulsa Ctrl+C y luego cierra la ventana.
 
-**Importante:** no abras `index.html` con doble clic. El visor 3D usa módulos JavaScript y necesita servirse desde un servidor local.
+**Importante:** no abras `index.html` con doble clic. El simulador y sus módulos JavaScript necesitan servirse desde el servidor local.
 
 El lanzador busca automáticamente un puerto libre entre 8765 y 8795. Si una instancia antigua sigue ocupando 8765, selecciona otro puerto y muestra la carpeta exacta que está sirviendo. Así se evita que el navegador abra accidentalmente una copia antigua de PrintStudio.
 
@@ -17,9 +17,15 @@ El lanzador busca automáticamente un puerto libre entre 8765 y 8795. Si una ins
 - Movimiento por arrastre, colores, tipografías, escala y capas.
 - Fondo transparente opcional.
 - Exportación PNG y guardado local del proyecto. El botón Guardar proyecto descarga un archivo editable .printstudio (datos JSON); no es una imagen ni un documento para abrir con Word. Para recuperarlo, inicia PrintStudio y pulsa Abrir proyecto, seleccionando ese archivo.
-- Visor 3D basado en Three.js; carga modelos GLB locales.
+- Simulador frontal de referencia para camiseta, hoodie, taza, tote y funda genérica de móvil. No es un visor 3D ni una maqueta certificada de proveedor.
+- Selector de producto separado del formato del lienzo: vertical, cuadrado, horizontal y personalizado.
+- La funda de móvil es únicamente una vista genérica de concepto; todavía no permite producir archivos para modelos específicos.
 
 Las dimensiones son plantillas genéricas iniciales, no perfiles certificados de proveedores. Antes de imprimir o vender, comprueba medidas, sangrados, zonas seguras y perfiles de color exigidos por cada proveedor POD.
+
+## Estado del simulador de producto
+
+El simulador frontal actual es una ayuda visual de diseño. Se ha separado el producto del formato del lienzo y se ha conservado la composición completa al mostrarla. Las formas dibujadas son prototipos visuales: no deben presentarse como mockups fotográficos, modelos 3D ni perfiles de impresión listos para vender. En particular, una funda de móvil requiere seleccionar el modelo exacto y asociar una plantilla de proveedor verificada antes de exportar para producción.
 
 ## Arquitectura y catálogo POD
 
