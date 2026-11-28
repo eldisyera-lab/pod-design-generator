@@ -84,7 +84,7 @@ function materialLabel(value){const raw=String(value||"Malla");return window.pri
 window.addEventListener("printstudio:languagechange",()=>{if(root)populateMaterials()});
 function selectedMaterialEntries(){const idx=Number(materialSelect.value);return idx<0?materials:materials[idx]?[materials[idx]]:[]}
 function syncMaterialColor(){const entry=selectedMaterialEntries().find(x=>x.material?.color);if(entry)colorInput.value=entry.material.userData?.printStudioGarmentColor||("#"+entry.material.color.getHexString())}
-function syncMaterialControls(){const entries=selectedMaterialEntries();const texturedAtlas=Boolean(root&&materials.length===1&&entries.length===1&&entries[0].material?.map);colorInput.disabled=texturedAtlas;colorInput.title=texturedAtlas?"Edición bloqueada: este GLB comparte una textura entre ropa, piel y cabello; no hay una máscara textil verificada.":"Cambia el color del material seleccionado.";return texturedAtlas}
+function syncMaterialControls(){const entries=selectedMaterialEntries();const texturedAtlas=Boolean(root&&materials.length===1&&entries.length===1&&entries[0].material?.map);const hasSafeMask=Boolean(entries[0]?.material?.userData?.printStudioTextileMask);colorInput.disabled=texturedAtlas&&!hasSafeMask;colorInput.title=colorInput.disabled?"No se ha podido identificar una zona textil segura en este GLB.":"El cambio se aplica al material o a la máscara textil detectada; piel y cabello permanecen protegidos.";return texturedAtlas&&!hasSafeMask}
 function isTextilePixel(r,g,b){
  const hi=Math.max(r,g,b),lo=Math.min(r,g,b),sat=hi?((hi-lo)/hi):0,lum=.2126*r+.7152*g+.0722*b;
  return sat<.18&&lum>28&&lum<220;
@@ -159,7 +159,7 @@ function recolorTexturedGarment(material,hex){
  say("Color de ropa aplicado mediante máscara de textura: "+Math.round(changed/(w*h)*100)+"% del atlas. Piel y cabello conservan su textura original.");
  return true;
 }
-function recolor(hex){if(!root)return;const entries=selectedMaterialEntries();const onlyOneTexturedMaterial=materials.length===1&&entries.length===1&&Boolean(entries[0].material?.map);if(onlyOneTexturedMaterial){say("Cambio de color bloqueado: el GLB comparte textura entre ropa, piel y cabello. Se necesita una máscara de prenda verificada.");return}const c=new THREE.Color(hex);entries.forEach(entry=>{const m=entry.material;if(m.color){m.color.copy(c);m.needsUpdate=true}})}
+function recolor(hex){if(!root)return;const entries=selectedMaterialEntries();const onlyOneTexturedMaterial=materials.length===1&&entries.length===1&&Boolean(entries[0].material?.map);if(onlyOneTexturedMaterial){if(!recolorTexturedGarment(entries[0].material,hex)){colorInput.disabled=true;return}colorInput.disabled=false;return}const c=new THREE.Color(hex);entries.forEach(entry=>{const m=entry.material;if(m.color){m.color.copy(c);m.needsUpdate=true}})}
 function printArtwork(){return typeof window.createPrintTextureCanvas==="function"?window.createPrintTextureCanvas():canvas}
 function tex(){let artwork=printArtwork(),t=new THREE.CanvasTexture(artwork);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();t.needsUpdate=true;return t}
 function place(x,y){
