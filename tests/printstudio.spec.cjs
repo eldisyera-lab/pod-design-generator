@@ -73,8 +73,8 @@ test('3D viewer and controls remain visible at desktop, tablet and mobile widths
     expect(dimensions.width).toBeGreaterThan(150);
     expect(dimensions.height).toBeGreaterThan(200);
     const workspace = await page.locator('main.workspace').boundingBox();
-    if (width > 820) expect(dimensions.x).toBeGreaterThan(workspace.x + workspace.width - 1);
-    else expect(dimensions.y).toBeGreaterThan(workspace.y + workspace.height - 1);
+    expect(dimensions.x).toBeGreaterThanOrEqual(workspace.x - 1);
+    expect(dimensions.x + dimensions.width).toBeLessThanOrEqual(workspace.x + workspace.width + 1);
   }
 });
 
@@ -449,4 +449,24 @@ test('UV island topology supports non-indexed geometry and rejects malformed buf
   expect(buildUvIslands([0,0, 1,0])).toBeNull();
   expect(buildUvIslands(new Float32Array([0,0, 1,0, 0,1]), new Uint16Array([0,1,9]))).toBeNull();
   expect(buildUvIslands(new Float32Array([0,0, 1,0, NaN,1]))).toBeNull();
+});
+
+
+test('professional workspace keeps the 3D viewer central and switches to the 2D design canvas', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173', { waitUntil: 'networkidle' });
+  const workspace = page.locator('main.workspace');
+  const viewer = page.locator('#threePreview');
+  await expect(page.locator('#viewTab3d')).toHaveAttribute('aria-selected', 'true');
+  await expect(viewer).toBeVisible();
+  const viewerBox = await viewer.boundingBox();
+  const workspaceBox = await workspace.boundingBox();
+  expect(viewerBox.x).toBeGreaterThanOrEqual(workspaceBox.x - 1);
+  expect(viewerBox.x + viewerBox.width).toBeLessThanOrEqual(workspaceBox.x + workspaceBox.width + 1);
+  await page.locator('#viewTab2d').click();
+  await expect(page.locator('#design2dPanel')).toBeVisible();
+  await expect(page.locator('#design3dPanel')).toBeHidden();
+  await expect(page.locator('#canvas')).toBeVisible();
+  await page.locator('#viewTab3d').click();
+  await expect(page.locator('#design3dPanel')).toBeVisible();
+  await expect(page.locator('#threePreview')).toBeVisible();
 });
