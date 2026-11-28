@@ -98,7 +98,7 @@ function buildTextileSurface(sourceMesh,material){
  const sampleContext=sampleCanvas.getContext("2d",{willReadFrequently:true});sampleContext.drawImage(image,0,0,w,h);
  const pixels=sampleContext.getImageData(0,0,w,h).data,geometry=sourceMesh.geometry,pos=geometry.attributes.position,uv=geometry.attributes.uv,norm=geometry.attributes.normal;
  if(!pos||!uv)return null;
- const index=geometry.index,faceCount=(index?index.count:pos.count)/3,positions=[],normals=[],uvs=[];
+ const index=geometry.index,faceCount=(index?index.count:pos.count)/3,positions=[],normals=[],uvs=[],maskCanvas=document.createElement("canvas");maskCanvas.width=w;maskCanvas.height=h;const maskContext=maskCanvas.getContext("2d");maskContext.fillStyle="#fff";
  const vertexAt=(face,corner)=>index?index.getX(face*3+corner):face*3+corner;
  const sampleIsTextile=vertex=>{
   const u=uv.getX(vertex),v=uv.getY(vertex),x=Math.max(0,Math.min(w-1,Math.floor(u*w))),y=Math.max(0,Math.min(h-1,Math.floor((1-v)*h))),p=(y*w+x)*4;
@@ -109,6 +109,7 @@ function buildTextileSurface(sourceMesh,material){
   const a=vertexAt(face,0),b=vertexAt(face,1),d=vertexAt(face,2);
   if(Number(sampleIsTextile(a))+Number(sampleIsTextile(b))+Number(sampleIsTextile(d))<2)continue;
   selectedFaces++;
+  const ua=uv.getX(a),va=uv.getY(a),ub=uv.getX(b),vb=uv.getY(b),ud=uv.getX(d),vd=uv.getY(d);maskContext.beginPath();maskContext.moveTo(ua*w,(1-va)*h);maskContext.lineTo(ub*w,(1-vb)*h);maskContext.lineTo(ud*w,(1-vd)*h);maskContext.closePath();maskContext.fill();
   for(const vertex of [a,b,d]){
    positions.push(pos.getX(vertex),pos.getY(vertex),pos.getZ(vertex));
    if(norm)normals.push(norm.getX(vertex),norm.getY(vertex),norm.getZ(vertex));
@@ -123,6 +124,7 @@ function buildTextileSurface(sourceMesh,material){
  garmentGeometry.computeBoundingSphere();
  const garmentMesh=new THREE.Mesh(garmentGeometry,material);garmentMesh.name=(sourceMesh.name||"model")+"_textile_surface";
  garmentMesh.matrixAutoUpdate=false;garmentMesh.matrix.copy(sourceMesh.matrix);garmentMesh.matrixWorld.copy(sourceMesh.matrixWorld);garmentMesh.frustumCulled=false;
+ material.userData.printStudioTextileMask=maskContext.getImageData(0,0,w,h).data;
  return {mesh:garmentMesh,faceCount:selectedFaces};
 }
 function recolorTexturedGarment(material,hex){
@@ -132,14 +134,13 @@ function recolorTexturedGarment(material,hex){
  if(!w||!h){say("La textura del modelo todavía no está disponible.");return false}
  const canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;
  const ctx=canvas.getContext("2d",{willReadFrequently:true});ctx.drawImage(image,0,0,w,h);
- const pixels=ctx.getImageData(0,0,w,h),data=pixels.data,target=new THREE.Color(hex);
+ const pixels=ctx.getImageData(0,0,w,h),data=pixels.data,mask=material.userData.printStudioTextileMask,target=new THREE.Color(hex);
  const tr=Math.round(target.r*255),tg=Math.round(target.g*255),tb=Math.round(target.b*255);
  let changed=0;
  for(let i=0;i<data.length;i+=4){
-  const r=data[i],g=data[i+1],b=data[i+2],hi=Math.max(r,g,b),lo=Math.min(r,g,b),sat=hi?((hi-lo)/hi):0,lum=.2126*r+.7152*g+.0722*b;
-  // El atlas de este personaje usa tonos cálidos para piel/cabello y tonos neutros para la tela.
-  // Se recolorean únicamente píxeles neutros de brillo medio; los tonos de piel y pelo quedan intactos.
-  if(isTextilePixel(r,g,b)){
+  const r=data[i],g=data[i+1],b=data[i+2],hi=Math.max(r,g,b),lum=.2126*r+.7152*g+.0722*b;
+  // Recolorear exclusivamente dentro de los mismos triángulos UV aceptados para la superficie textil.
+  if(mask&&mask[i/4]>0){
    const shade=Math.max(.24,Math.min(1.22,.34+(lum/255)*.88));
    data[i]=Math.min(255,tr*shade);data[i+1]=Math.min(255,tg*shade);data[i+2]=Math.min(255,tb*shade);changed++;
   }
