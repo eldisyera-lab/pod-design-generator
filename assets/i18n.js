@@ -2,7 +2,7 @@
   const translations = {
     "PrintStudio — Estudio de diseño POD":"PrintStudio — POD Design Studio",
     "Guardar proyecto":"Save project","Guardar proyecto (.printstudio)":"Save project (.printstudio)","Abrir proyecto":"Open project","Exportar PNG":"Export PNG",
-    "Producto":"Product","Formato de impresión":"Print format",
+    "Producto":"Product","Formato del lienzo":"Canvas format","Vertical · 5:6":"Portrait · 5:6","Cuadrado · 1:1":"Square · 1:1","Horizontal · 3:2":"Landscape · 3:2","Personalizado":"Custom","Ancho (px)":"Width (px)","Alto (px)":"Height (px)","Funda para móvil (genérica)":"Phone case (generic)","Modelo de móvil":"Phone model","Funda genérica (solo demostración)":"Generic case (demo only)","Los perfiles exactos de iPhone, Samsung Galaxy y otros modelos se añadirán cuando se vinculen a una plantilla de proveedor verificada.":"Exact iPhone, Samsung Galaxy and other model profiles will be added when linked to a verified provider template.","Maqueta de referencia; las dimensiones de producción dependen de la plantilla del proveedor.":"Reference mockup; production dimensions depend on the provider template.","Formato de impresión":"Print format",
     "Camiseta / sudadera":"T-shirt / sweatshirt","Pulóver / hoodie":"Pullover / hoodie",
     "Taza / jarra":"Mug / jug","Bolsa / tote bag":"Bag / tote bag","Diseño cuadrado":"Square design",
     "Elementos":"Elements","＋ Añadir texto":"＋ Add text","＋ Añadir forma":"＋ Add shape",
