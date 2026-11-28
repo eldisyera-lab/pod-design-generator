@@ -10,6 +10,7 @@ test('PrintStudio loads the 2D editor and the new product simulator without the 
   await expect(page.locator('#viewTab2d')).toContainText('Diseño 2D');
   await expect(page.locator('#threePreview')).toHaveCount(0);
   await expect(page.locator('#modelFile')).toHaveCount(0);
+  await page.locator('#viewTab2d').click();
   await page.locator('#addText').click();
   await expect(page.locator('#selectionTools')).toBeVisible();
   expect(pageErrors).toEqual([]);
