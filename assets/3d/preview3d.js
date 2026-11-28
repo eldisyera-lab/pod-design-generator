@@ -5,7 +5,7 @@ const host=document.getElementById("threePreview"),canvas=document.getElementByI
 const scene=new THREE.Scene();scene.background=new THREE.Color("#202a38");
 const camera=new THREE.PerspectiveCamera(35,1,.01,1000),renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;host.replaceChildren(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xffffff,0x697386,2));const key=new THREE.DirectionalLight(0xffffff,3);key.position.set(-3,5,5);scene.add(key);const fill=new THREE.DirectionalLight(0xc8d8ff,1.4);fill.position.set(4,1,3);scene.add(fill);
-let root=null,meshes=[],materials=[],decals=[],lastModelBuffer=null,lastModelName="",target=new THREE.Vector3(),distance=4,yaw=-.25,pitch=.08,down=null,drag=false,lx=0,ly=0;
+let root=null,meshes=[],materials=[],decals=[],garmentSurfaceMeshes=[],printTargets=[],lastModelBuffer=null,lastModelName="",target=new THREE.Vector3(),distance=4,yaw=-.25,pitch=.08,down=null,drag=false,lx=0,ly=0;
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
 const say=s=>{status.dataset.message=s;status.textContent=window.printStudioTranslate?window.printStudioTranslate(s):s};
 window.addEventListener("printstudio:languagechange",()=>{if(status.dataset.message)status.textContent=window.printStudioTranslate?window.printStudioTranslate(status.dataset.message):status.dataset.message});
@@ -26,6 +26,8 @@ function removePrints(showMessage=true){
 }
 function clear(){
   removePrints(false);
+  garmentSurfaceMeshes.forEach(mesh=>mesh.geometry?.dispose());
+  garmentSurfaceMeshes=[];printTargets=[];
   if(root){
     scene.remove(root);
     const geometries=new Set(),modelMaterials=new Set(),textures=new Set();
@@ -83,6 +85,46 @@ window.addEventListener("printstudio:languagechange",()=>{if(root)populateMateri
 function selectedMaterialEntries(){const idx=Number(materialSelect.value);return idx<0?materials:materials[idx]?[materials[idx]]:[]}
 function syncMaterialColor(){const entry=selectedMaterialEntries().find(x=>x.material?.color);if(entry)colorInput.value=entry.material.userData?.printStudioGarmentColor||("#"+entry.material.color.getHexString())}
 function syncMaterialControls(){const entries=selectedMaterialEntries();const texturedAtlas=Boolean(root&&materials.length===1&&entries.length===1&&entries[0].material?.map);colorInput.disabled=false;colorInput.title=texturedAtlas?"El color se aplica a las zonas de tela detectadas en el atlas UV; piel y cabello se excluyen mediante una máscara de color.":"Cambia el color del material seleccionado.";return false}
+function isTextilePixel(r,g,b){
+ const hi=Math.max(r,g,b),lo=Math.min(r,g,b),sat=hi?((hi-lo)/hi):0,lum=.2126*r+.7152*g+.0722*b;
+ return sat<.18&&lum>28&&lum<220;
+}
+function buildTextileSurface(sourceMesh,material){
+ const sourceMap=material?.userData?.printStudioOriginalMap||material?.map;
+ if(!sourceMap?.image)return null;
+ const image=sourceMap.image,w=image.width||image.videoWidth,h=image.height||image.videoHeight;
+ if(!w||!h)return null;
+ const sampleCanvas=document.createElement("canvas");sampleCanvas.width=w;sampleCanvas.height=h;
+ const sampleContext=sampleCanvas.getContext("2d",{willReadFrequently:true});sampleContext.drawImage(image,0,0,w,h);
+ const pixels=sampleContext.getImageData(0,0,w,h).data,geometry=sourceMesh.geometry,pos=geometry.attributes.position,uv=geometry.attributes.uv,norm=geometry.attributes.normal;
+ if(!pos||!uv)return null;
+ const index=geometry.index,faceCount=(index?index.count:pos.count)/3,positions=[],normals=[],uvs=[];
+ const vertexAt=(face,corner)=>index?index.getX(face*3+corner):face*3+corner;
+ const sampleIsTextile=vertex=>{
+  const u=uv.getX(vertex),v=uv.getY(vertex),x=Math.max(0,Math.min(w-1,Math.floor(u*w))),y=Math.max(0,Math.min(h-1,Math.floor((1-v)*h))),p=(y*w+x)*4;
+  return isTextilePixel(pixels[p],pixels[p+1],pixels[p+2]);
+ };
+ let selectedFaces=0;
+ for(let face=0;face<faceCount;face++){
+  const a=vertexAt(face,0),b=vertexAt(face,1),d=vertexAt(face,2);
+  if(Number(sampleIsTextile(a))+Number(sampleIsTextile(b))+Number(sampleIsTextile(d))<2)continue;
+  selectedFaces++;
+  for(const vertex of [a,b,d]){
+   positions.push(pos.getX(vertex),pos.getY(vertex),pos.getZ(vertex));
+   if(norm)normals.push(norm.getX(vertex),norm.getY(vertex),norm.getZ(vertex));
+   uvs.push(uv.getX(vertex),uv.getY(vertex));
+  }
+ }
+ if(selectedFaces<500)return null;
+ const garmentGeometry=new THREE.BufferGeometry();
+ garmentGeometry.setAttribute("position",new THREE.Float32BufferAttribute(positions,3));
+ if(normals.length)garmentGeometry.setAttribute("normal",new THREE.Float32BufferAttribute(normals,3));else garmentGeometry.computeVertexNormals();
+ garmentGeometry.setAttribute("uv",new THREE.Float32BufferAttribute(uvs,2));
+ garmentGeometry.computeBoundingSphere();
+ const garmentMesh=new THREE.Mesh(garmentGeometry,material);garmentMesh.name=(sourceMesh.name||"model")+"_textile_surface";
+ garmentMesh.matrixAutoUpdate=false;garmentMesh.matrix.copy(sourceMesh.matrix);garmentMesh.matrixWorld.copy(sourceMesh.matrixWorld);garmentMesh.frustumCulled=false;
+ return {mesh:garmentMesh,faceCount:selectedFaces};
+}
 function recolorTexturedGarment(material,hex){
  const sourceMap=material.userData.printStudioOriginalMap||(material.userData.printStudioOriginalMap=material.map);
  if(!sourceMap?.image){say("No se pudo acceder a la textura del modelo para recolorear la ropa.");return false}
@@ -97,7 +139,7 @@ function recolorTexturedGarment(material,hex){
   const r=data[i],g=data[i+1],b=data[i+2],hi=Math.max(r,g,b),lo=Math.min(r,g,b),sat=hi?((hi-lo)/hi):0,lum=.2126*r+.7152*g+.0722*b;
   // El atlas de este personaje usa tonos cálidos para piel/cabello y tonos neutros para la tela.
   // Se recolorean únicamente píxeles neutros de brillo medio; los tonos de piel y pelo quedan intactos.
-  if(sat<.235&&lum>28&&lum<205){
+  if(isTextilePixel(r,g,b)){
    const shade=Math.max(.24,Math.min(1.22,.34+(lum/255)*.88));
    data[i]=Math.min(255,tr*shade);data[i+1]=Math.min(255,tg*shade);data[i+2]=Math.min(255,tb*shade);changed++;
   }
@@ -121,7 +163,8 @@ function place(x,y){
  if(!r.width||!r.height)return;
  pointer.set((x-r.left)/r.width*2-1,-((y-r.top)/r.height*2-1));
  ray.setFromCamera(pointer,camera);
- const hits=ray.intersectObjects(meshes,false);
+ if(!printTargets.length){say("Este modelo no tiene una zona textil identificable con suficiente seguridad para estampar.");return}
+ const hits=ray.intersectObjects(printTargets,false);
  if(!hits.length){say("Haz clic sobre la superficie del producto.");return}
  const h=hits[0];
  if(!h.face){say("No se pudo determinar la superficie. Prueba otra zona del modelo.");return}
@@ -147,7 +190,7 @@ async function libraryRequest(mode,action,value){const db=await openLibraryDB();
 function bytesToBase64(buffer){let binary="",bytes=new Uint8Array(buffer),chunk=0x8000;for(let i=0;i<bytes.length;i+=chunk)binary+=String.fromCharCode(...bytes.subarray(i,i+chunk));return btoa(binary)}
 function base64ToBytes(value){const binary=atob(value),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return bytes.buffer}
 async function refreshLibrary(){const host=document.getElementById("modelLibraryList");try{const models=await libraryRequest("readonly","all");host.replaceChildren();if(!models.length){host.textContent="Aún no hay modelos guardados.";return}models.sort((a,b)=>a.name.localeCompare(b.name)).forEach(model=>{const row=document.createElement("div");row.style.cssText="display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid #29364d";const title=document.createElement("span");title.style.flex="1";title.textContent=model.name+" · "+model.category;const load=document.createElement("button");load.className="btn";load.textContent="Usar modelo";load.title="Sustituye el modelo que está actualmente en el visor 3D";load.dataset.load=model.id;const del=document.createElement("button");del.className="btn";del.textContent="Eliminar";del.dataset.delete=model.id;row.append(title,load,del);host.append(row)})}catch(error){console.error(error);host.textContent="No se pudo acceder a la biblioteca local."}}
-function loadGlbBuffer(buffer,name){say("Cargando modelo…");lastModelBuffer=buffer.slice(0);lastModelName=name;new GLTFLoader().parse(buffer.slice(0),"",g=>{clear();root=g.scene;scene.add(root);root.traverse(o=>{if(o.isMesh)meshes.push(o)});isolateMeshMaterials();populateMaterials();fit();syncMaterialColor();const colorBlocked=syncMaterialControls();say(colorBlocked?"Modelo cargado: "+name+". Este GLB usa una sola textura para toda la figura; el color está desactivado hasta implementar la selección por zonas UV. Puedes girar el modelo y colocar estampados.":"Modelo cargado: "+name+". Arrastra para girar y haz clic en la superficie para estampar.")},err=>{console.error(err);say("No se pudo leer el GLB o sus texturas.")})}
+function loadGlbBuffer(buffer,name){say("Cargando modelo…");lastModelBuffer=buffer.slice(0);lastModelName=name;new GLTFLoader().parse(buffer.slice(0),"",g=>{clear();root=g.scene;scene.add(root);root.traverse(o=>{if(o.isMesh)meshes.push(o)});isolateMeshMaterials();populateMaterials();printTargets=meshes.slice();if(materials.length===1&&materials[0].material?.map){const textile=buildTextileSurface(meshes[0],materials[0].material);if(textile){garmentSurfaceMeshes.push(textile.mesh);printTargets=[textile.mesh];say("Zona textil detectada: "+textile.faceCount.toLocaleString()+" triángulos. El estampado se limitará a esa superficie.")}else{printTargets=[];say("No se pudo identificar una zona textil segura. El estampado queda bloqueado para evitar imprimir sobre piel o cabello.")}}fit();syncMaterialColor();const colorBlocked=syncMaterialControls();say(colorBlocked?"Modelo cargado: "+name+". Este GLB usa una sola textura para toda la figura; el color está desactivado hasta implementar la selección por zonas UV. Puedes girar el modelo y colocar estampados.":"Modelo cargado: "+name+". Arrastra para girar y haz clic en la superficie para estampar.")},err=>{console.error(err);say("No se pudo leer el GLB o sus texturas.")})}
 fileInput.addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;if(!f.name.toLowerCase().endsWith(".glb")){say("Selecciona un archivo .GLB con texturas integradas.");return}const rd=new FileReader();rd.onload=()=>loadGlbBuffer(rd.result,f.name);rd.onerror=()=>say("No se pudo leer el GLB o sus texturas.");rd.readAsArrayBuffer(f)});
 const saveLibraryButton=document.getElementById("saveModelToLibrary"),libraryStatus=document.getElementById("libraryStatus");
 function setLibraryStatus(message){if(libraryStatus){libraryStatus.dataset.message=message;libraryStatus.textContent=window.printStudioTranslate?window.printStudioTranslate(message):message}}
