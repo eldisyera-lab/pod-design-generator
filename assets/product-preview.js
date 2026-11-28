@@ -9,10 +9,10 @@ const phoneModel=document.getElementById("phoneCaseModel");
 
 const PROFILES={
  shirt:{zone:{x:166,y:166,w:188,h:206},label:"Camiseta · vista frontal"},
- hoodie:{zone:{x:166,y:174,w:188,h:202},label:"Hoodie · vista frontal"},
- mug:{zone:{x:151,y:207,w:218,h:138},label:"Taza · panel frontal de referencia"},
+ hoodie:{zone:{x:185,y:164,w:150,h:178},label:"Hoodie · pecho frontal"},
+ mug:{zone:{x:155,y:207,w:185,h:138},label:"Taza · panel frontal de referencia"},
  tote:{zone:{x:157,y:213,w:206,h:205},label:"Bolsa · panel frontal"},
- "phone-case":{zone:{x:184,y:152,w:152,h:282},label:"Funda · reverso de referencia"}
+ "phone-case":{zone:{x:184,y:162,w:152,h:272},label:"Funda · reverso de referencia"}
 };
 
 function hexRgb(hex){const n=parseInt(String(hex||"#e7e9ed").replace("#",""),16);return[(n>>16)&255,(n>>8)&255,n&255]}
