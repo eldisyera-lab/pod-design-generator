@@ -272,7 +272,34 @@ document.getElementById('saveBtn').onclick=async()=>{try{say('Preparando el arch
 async function restoreProjectData(d){if(!d||!Array.isArray(d.items))throw new Error('El archivo no contiene un proyecto válido');const restored=[];for(const v of d.items){const o={...v};if(o.type==='image'){if(!v.imageData)throw new Error('El proyecto contiene una imagen sin datos');o.img=await loadImage(v.imageData);o.originalImg=await loadImage(v.originalImageData||v.imageData);delete o.imageData;delete o.originalImageData}restored.push(o)}items=restored;bg=d.bg||'#ffffff';transparent=!!d.transparent;product.value=(d.product==='square'?'shirt':(['shirt','hoodie','mug','tote','phone-case'].includes(d.product)?d.product:'shirt'));canvasFormat.value=d.format|| (d.product==='mug'||d.product==='tote'?'custom':d.product==='square'?'square':'portrait');customWidth.value=d.customWidth||(d.product==='mug'?3000:d.product==='tote'?3600:3000);customHeight.value=d.customHeight||(d.product==='mug'?1200:d.product==='tote'?4200:4500);canvas.width=900;const restoredSize=getCanvasSize();canvas.height=Math.round(900*restoredSize[1]/restoredSize[0]);document.querySelector('.artboard').style.aspectRatio=restoredSize[0]+'/'+restoredSize[1];selected=-1;updateCanvasFormat();sync();render();document.getElementById('phoneCaseOptions').hidden=product.value!=='phone-case'}
 document.getElementById('openBtn').onclick=()=>document.getElementById('projectFile').click();
 document.getElementById('projectFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{say('Abriendo proyecto…');const d=JSON.parse(await file.text());await restoreProjectData(d);localStorage.setItem('printstudio-project',JSON.stringify(d));say('Proyecto abierto correctamente, incluidas sus imágenes.')}catch(err){console.error(err);say('No se pudo abrir el proyecto: '+err.message)}finally{e.target.value=''}};
-document.getElementById('exportBtn').onclick=()=>{try{const [w,h]=getCanvasSize(),out=document.createElement('canvas');out.width=w;out.height=h;const c=out.getContext('2d');if(!c)throw new Error('No se pudo crear el lienzo de exportación');if(!transparent){c.fillStyle=bg;c.fillRect(0,0,w,h)}c.scale(w/canvas.width,h/canvas.height);items.forEach(o=>{c.save();c.translate(o.x,o.y);c.scale(o.scale||1,o.scale||1);if(o.type==='text'){drawText(c,o)}else if(o.type==='shape'){c.fillStyle=o.color;if(o.shape==='circle'){c.beginPath();c.arc(0,0,o.size/2,0,Math.PI*2);c.fill()}else c.fillRect(-o.size/2,-o.size/2,o.size,o.size)}else if(o.type==='image'&&o.img)c.drawImage(o.img,-o.w/2,-o.h/2,o.w,o.h);c.restore()});out.toBlob(blob=>{if(!blob){say('No se pudo crear el PNG.');return}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='printstudio-'+product.value+'-'+w+'x'+h+'.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);say('PNG exportado: '+w+' × '+h+' px.');},'image/png')}catch(e){console.error(e);say('Error al exportar: '+e.message)}};
+
+async function addPngResolutionMetadata(blob,dpi=300){
+ const bytes=new Uint8Array(await blob.arrayBuffer());
+ const signature=[137,80,78,71,13,10,26,10];
+ if(bytes.length<33||!signature.every((v,i)=>bytes[i]===v))throw new Error('El navegador no generó un PNG válido');
+ const ppm=Math.round(dpi/0.0254);
+ const chunk=new Uint8Array(21),view=new DataView(chunk.buffer);
+ view.setUint32(0,9,false);
+ chunk.set([112,72,89,115],4); // pHYs
+ view.setUint32(8,ppm,false);view.setUint32(12,ppm,false);chunk[16]=1;
+ let crc=0xffffffff;
+ for(let i=4;i<17;i++){crc^=chunk[i];for(let bit=0;bit<8;bit++)crc=(crc&1)?(crc>>>1)^0xedb88320:crc>>>1;}
+ view.setUint32(17,(crc^0xffffffff)>>>0,false);
+ const parts=[bytes.subarray(0,8)];let offset=8,inserted=false,foundHeader=false;
+ while(offset+12<=bytes.length){
+  const length=new DataView(bytes.buffer,bytes.byteOffset+offset,4).getUint32(0,false);
+  const end=offset+12+length;if(end>bytes.length)throw new Error('PNG incompleto o dañado');
+  const type=String.fromCharCode(...bytes.subarray(offset+4,offset+8));
+  if(type==='IHDR')foundHeader=true;
+  if(type!=='pHYs')parts.push(bytes.subarray(offset,end));
+  if(type==='IHDR'){parts.push(chunk);inserted=true;}
+  offset=end;
+  if(type==='IEND')break;
+ }
+ if(!foundHeader||!inserted||offset!==bytes.length)throw new Error('No se pudo actualizar la resolución del PNG');
+ return new Blob(parts,{type:'image/png'});
+}
+document.getElementById('exportBtn').onclick=async()=>{try{const [w,h]=getCanvasSize(),out=document.createElement('canvas');out.width=w;out.height=h;const c=out.getContext('2d');if(!c)throw new Error('No se pudo crear el lienzo de exportación');if(!transparent){c.fillStyle=bg;c.fillRect(0,0,w,h)}c.scale(w/canvas.width,h/canvas.height);items.forEach(o=>{c.save();c.translate(o.x,o.y);c.scale(o.scale||1,o.scale||1);if(o.type==='text'){drawText(c,o)}else if(o.type==='shape'){c.fillStyle=o.color;if(o.shape==='circle'){c.beginPath();c.arc(0,0,o.size/2,0,Math.PI*2);c.fill()}else c.fillRect(-o.size/2,-o.size/2,o.size,o.size)}else if(o.type==='image'&&o.img)c.drawImage(o.img,-o.w/2,-o.h/2,o.w,o.h);c.restore()});const rawBlob=await new Promise(resolve=>out.toBlob(resolve,'image/png'));if(!rawBlob)throw new Error('No se pudo crear el PNG');const blob=await addPngResolutionMetadata(rawBlob,300);const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='printstudio-'+product.value+'-'+w+'x'+h+'.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);say('PNG exportado: '+w+' × '+h+' px · 300 DPI.')}catch(e){console.error(e);say('Error al exportar: '+e.message)}};
 document.querySelector('.artboard').style.aspectRatio='4500/5400';updateCanvasFormat();render();sync();
 </script><script>
 (function(){const a=document.getElementById("viewTab3d"),b=document.getElementById("viewTab2d"),pa=document.getElementById("design3dPanel"),pb=document.getElementById("design2dPanel");function show(v){pa.hidden=!v;pb.hidden=v;a.setAttribute("aria-selected",String(v));b.setAttribute("aria-selected",String(!v));if(v)requestAnimationFrame(()=>window.dispatchEvent(new Event("resize")))}a.addEventListener("click",()=>show(true));b.addEventListener("click",()=>show(false));show(true)})();;
