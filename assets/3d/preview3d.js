@@ -81,9 +81,37 @@ function materialLabel(value){const raw=String(value||"Malla");return window.pri
  }
 window.addEventListener("printstudio:languagechange",()=>{if(root)populateMaterials()});
 function selectedMaterialEntries(){const idx=Number(materialSelect.value);return idx<0?materials:materials[idx]?[materials[idx]]:[]}
-function syncMaterialColor(){const entry=selectedMaterialEntries().find(x=>x.material?.color);if(entry)colorInput.value="#"+entry.material.color.getHexString()}
-function syncMaterialControls(){const entries=selectedMaterialEntries();const blocked=Boolean(root&&materials.length===1&&entries.length===1&&entries[0].material?.map);colorInput.disabled=blocked;colorInput.title=blocked?"Este GLB comparte una sola textura entre piel, pelo y ropa. El color por zonas UV aún no está disponible.":"";return blocked}
-function recolor(hex){if(!root)return;const entries=selectedMaterialEntries();const onlyOneTexturedMaterial=materials.length===1&&entries.length===1&&Boolean(entries[0].material?.map);if(onlyOneTexturedMaterial){say("Este modelo utiliza una sola textura para toda la figura. El cambio de color global se ha bloqueado para no teñir la piel, el pelo y la ropa a la vez. Necesita edición por zonas UV.");return}const c=new THREE.Color(hex);entries.forEach(entry=>{const m=entry.material;if(m.color){m.color.copy(c);m.needsUpdate=true}})}
+function syncMaterialColor(){const entry=selectedMaterialEntries().find(x=>x.material?.color);if(entry)colorInput.value=entry.material.userData?.printStudioGarmentColor||("#"+entry.material.color.getHexString())}
+function syncMaterialControls(){const entries=selectedMaterialEntries();const texturedAtlas=Boolean(root&&materials.length===1&&entries.length===1&&entries[0].material?.map);colorInput.disabled=false;colorInput.title=texturedAtlas?"El color se aplica a las zonas de tela detectadas en el atlas UV; piel y cabello se excluyen mediante una máscara de color.":"Cambia el color del material seleccionado.";return false}
+function recolorTexturedGarment(material,hex){
+ const sourceMap=material.userData.printStudioOriginalMap||(material.userData.printStudioOriginalMap=material.map);
+ if(!sourceMap?.image){say("No se pudo acceder a la textura del modelo para recolorear la ropa.");return false}
+ const image=sourceMap.image,w=image.width||image.videoWidth,h=image.height||image.videoHeight;
+ if(!w||!h){say("La textura del modelo todavía no está disponible.");return false}
+ const canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;
+ const ctx=canvas.getContext("2d",{willReadFrequently:true});ctx.drawImage(image,0,0,w,h);
+ const pixels=ctx.getImageData(0,0,w,h),data=pixels.data,target=new THREE.Color(hex);
+ const tr=Math.round(target.r*255),tg=Math.round(target.g*255),tb=Math.round(target.b*255);
+ let changed=0;
+ for(let i=0;i<data.length;i+=4){
+  const r=data[i],g=data[i+1],b=data[i+2],hi=Math.max(r,g,b),lo=Math.min(r,g,b),sat=hi?((hi-lo)/hi):0,lum=.2126*r+.7152*g+.0722*b;
+  // El atlas de este personaje usa tonos cálidos para piel/cabello y tonos neutros para la tela.
+  // Se recolorean únicamente píxeles neutros de brillo medio; los tonos de piel y pelo quedan intactos.
+  if(sat<.235&&lum>28&&lum<205){
+   const shade=Math.max(.24,Math.min(1.22,.34+(lum/255)*.88));
+   data[i]=Math.min(255,tr*shade);data[i+1]=Math.min(255,tg*shade);data[i+2]=Math.min(255,tb*shade);changed++;
+  }
+ }
+ if(!changed){say("No se detectaron zonas de tela recoloreables en la textura de este GLB.");return false}
+ ctx.putImageData(pixels,0,0);
+ const next=sourceMap.clone();next.image=canvas;next.needsUpdate=true;next.colorSpace=THREE.SRGBColorSpace;
+ const previous=material.userData.printStudioGeneratedMap;
+ material.map=next;material.userData.printStudioGeneratedMap=next;material.userData.printStudioGarmentColor=hex;material.needsUpdate=true;
+ if(previous&&previous!==next)previous.dispose();
+ say("Color de ropa aplicado mediante máscara de textura: "+Math.round(changed/(w*h)*100)+"% del atlas. Piel y cabello conservan su textura original.");
+ return true;
+}
+function recolor(hex){if(!root)return;const entries=selectedMaterialEntries();const onlyOneTexturedMaterial=materials.length===1&&entries.length===1&&Boolean(entries[0].material?.map);if(onlyOneTexturedMaterial){recolorTexturedGarment(entries[0].material,hex);return}const c=new THREE.Color(hex);entries.forEach(entry=>{const m=entry.material;if(m.color){m.color.copy(c);m.needsUpdate=true}})}
 function printArtwork(){return typeof window.createPrintTextureCanvas==="function"?window.createPrintTextureCanvas():canvas}
 function tex(){let artwork=printArtwork(),t=new THREE.CanvasTexture(artwork);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();t.needsUpdate=true;return t}
 function place(x,y){
