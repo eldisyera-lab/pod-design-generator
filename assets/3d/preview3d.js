@@ -26,7 +26,7 @@ function removePrints(showMessage=true){
 }
 function clear(){
   removePrints(false);
-  garmentSurfaceMeshes.forEach(mesh=>mesh.geometry?.dispose());
+  garmentSurfaceMeshes.forEach(mesh=>{scene.remove(mesh);mesh.geometry?.dispose()});
   garmentSurfaceMeshes=[];printTargets=[];
   if(root){
     scene.remove(root);
